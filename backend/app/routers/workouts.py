@@ -5,11 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Workout
+from app.models import Route, Workout
 from app.schemas import WorkoutCreate, WorkoutDetail, WorkoutSummary, WorkoutUpdate
 from app.services import analytics
 from app.services.fit_encoder import encode_rowing_activity
-from app.services.routes import ROUTES
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
@@ -72,10 +71,10 @@ def update_workout(workout_id: int, payload: WorkoutUpdate, db: Session = Depend
     workout = get_workout_or_404(db, workout_id)
     if payload.notes is not None:
         workout.notes = payload.notes
-    if payload.route_id is not None:
-        if payload.route_id != "" and payload.route_id not in ROUTES:
+    if "route_id" in payload.model_fields_set:
+        if payload.route_id is not None and db.get(Route, payload.route_id) is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Unknown route")
-        workout.route_id = payload.route_id or None
+        workout.route_id = payload.route_id
     db.commit()
     return workout
 
@@ -89,9 +88,12 @@ def delete_workout(workout_id: int, db: Session = Depends(get_db)):
 @router.get("/{workout_id}/fit")
 def download_fit(workout_id: int, db: Session = Depends(get_db)):
     workout = get_workout_or_404(db, workout_id)
-    route = ROUTES.get(workout.route_id) if workout.route_id else None
+    route = db.get(Route, workout.route_id) if workout.route_id else None
     data = encode_rowing_activity(
-        workout.started_at, workout.samples, analytics.summarize(workout.samples), route=route
+        workout.started_at,
+        workout.samples,
+        analytics.summarize(workout.samples),
+        route_waypoints=route.waypoints if route else None,
     )
     filename = f"row-{workout.started_at:%Y%m%d-%H%M}.fit"
     return Response(

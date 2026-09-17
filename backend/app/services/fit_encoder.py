@@ -13,7 +13,7 @@ import struct
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from app.services.routes import Route, position_at
+from app.services.routes import LatLon, position_at
 
 FIT_EPOCH = 631065600  # 1989-12-31T00:00:00Z in unix seconds
 SEMICIRCLE = (1 << 31) / 180  # degrees -> FIT semicircles
@@ -124,13 +124,16 @@ def _speed(pace_s_per_500: float | None) -> float | None:
 
 
 def encode_rowing_activity(
-    started_at: datetime, samples: Sequence[dict], summary: dict, route: Route | None = None
+    started_at: datetime,
+    samples: Sequence[dict],
+    summary: dict,
+    route_waypoints: Sequence[LatLon] | None = None,
 ) -> bytes:
     """Build a complete .fit file.
 
     `samples` are per-second dicts (schemas.Sample), `summary` is analytics.summarize(). When
-    `route` is given, each record carries a lat/lon walked along that course by the sample's
-    cumulative distance, so Strava/Garmin Connect draw a virtual map for the activity.
+    `route_waypoints` is given, each record carries a lat/lon walked along that course by the
+    sample's cumulative distance, so Strava/Garmin Connect draw a virtual map for the activity.
     """
     if not samples:
         raise ValueError("cannot encode a workout without samples")
@@ -150,7 +153,11 @@ def encode_rowing_activity(
     body += EVENT.data({253: start, 0: 0, 1: 0})  # timer, start
 
     for s in samples:
-        lat, lon = position_at(route, float(s.get("distance") or 0)) if route else (None, None)
+        lat, lon = (
+            position_at(route_waypoints, float(s.get("distance") or 0))
+            if route_waypoints
+            else (None, None)
+        )
         body += RECORD.data(
             {
                 253: start + int(round(float(s["t"]))),

@@ -26,7 +26,7 @@ class WorkoutCreate(BaseModel):
 
 class WorkoutUpdate(BaseModel):
     notes: str | None = None
-    route_id: str | None = None
+    route_id: int | None = None
 
 
 class WorkoutSummary(BaseModel):
@@ -48,7 +48,7 @@ class WorkoutSummary(BaseModel):
     max_hr: float | None
     disconnect_s: float
     notes: str
-    route_id: str | None
+    route_id: int | None
     strava_status: str
     strava_activity_id: int | None
     strava_error: str | None
@@ -100,7 +100,9 @@ class StravaStatus(BaseModel):
 
 
 class RouteInfo(BaseModel):
-    id: str
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
     name: str
     location: str
     length_m: float

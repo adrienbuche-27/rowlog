@@ -72,7 +72,7 @@ export function WorkoutPage() {
   async function changeRoute(routeId: string) {
     setRouteBusy(true)
     try {
-      const updated = await api.updateRoute(workoutId, routeId || null)
+      const updated = await api.updateRoute(workoutId, routeId ? Number(routeId) : null)
       setWorkout((w) => (w ? { ...w, ...updated } : w))
     } finally {
       setRouteBusy(false)
@@ -155,7 +155,7 @@ export function WorkoutPage() {
                 <option value="">No location (indoor)</option>
                 {routes.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.name} — {r.location}
+                    {r.location ? `${r.name} — ${r.location}` : r.name}
                   </option>
                 ))}
               </select>

@@ -19,9 +19,12 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  // Let the browser set its own multipart boundary for FormData bodies.
+  const jsonHeaders: Record<string, string> =
+    init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }
   const res = await fetch(`${BASE}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+    headers: { ...jsonHeaders, ...(init.headers ?? {}) },
   })
   if (!res.ok) {
     let message = res.statusText
@@ -44,15 +47,22 @@ export const api = {
     request<WorkoutSummary>('/api/workouts', { method: 'POST', body: JSON.stringify(payload) }),
   updateNotes: (id: number, notes: string) =>
     request<WorkoutSummary>(`/api/workouts/${id}`, { method: 'PATCH', body: JSON.stringify({ notes }) }),
-  updateRoute: (id: number, routeId: string | null) =>
+  updateRoute: (id: number, routeId: number | null) =>
     request<WorkoutSummary>(`/api/workouts/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ route_id: routeId ?? '' }),
+      body: JSON.stringify({ route_id: routeId }),
     }),
   deleteWorkout: (id: number) => request<void>(`/api/workouts/${id}`, { method: 'DELETE' }),
   fitUrl: (id: number) => `${BASE}/api/workouts/${id}/fit`,
 
   routes: () => request<RouteInfo[]>('/api/routes'),
+  createRoute: (name: string, file: File) => {
+    const form = new FormData()
+    form.append('name', name)
+    form.append('file', file)
+    return request<RouteInfo>('/api/routes', { method: 'POST', body: form })
+  },
+  deleteRoute: (id: number) => request<void>(`/api/routes/${id}`, { method: 'DELETE' }),
 
   stats: () => request<StatsOverview>('/api/stats/overview'),
 
