@@ -42,6 +42,46 @@ describe('parseRowerData', () => {
     expect(parseRowerData(bytes(flags, 0x00, 0xff, 0xff))).toEqual({ instantPower: -1 })
   })
 
+  it('parses a real WaterRower S4 packet (warm-up, distance/pace/power/energy/HR/elapsed)', () => {
+    // captured from Settings → "Log raw Bluetooth packets" during a live 30 s test row
+    const view = bytes(
+      0x2c, 0x0b, 0x30, 0x49, 0x00, 0x65, 0x01, 0x00, 0x08, 0x02, 0x23, 0x00, 0x0b, 0x00, 0x32, 0x28,
+      0xab, 0x00, 0x71, 0x01,
+    )
+    expect(parseRowerData(view)).toEqual({
+      strokeRate: 24,
+      strokeCount: 73,
+      totalDistance: 357,
+      instantPace: 520,
+      instantPower: 35,
+      totalEnergy: 11,
+      energyPerHour: 10290,
+      energyPerMinute: 171,
+      heartRate: 0,
+      elapsedTime: 369,
+    })
+  })
+
+  it('parses a real WaterRower S4 packet mid-stroke, higher stroke rate and power', () => {
+    // same session, ~40 s later once the rower settled into a steady 27 spm
+    const view = bytes(
+      0x2c, 0x0b, 0x36, 0x53, 0x00, 0xa0, 0x01, 0x00, 0xe5, 0x01, 0x46, 0x00, 0x0e, 0x00, 0xb0, 0x18,
+      0x69, 0x00, 0x91, 0x01,
+    )
+    expect(parseRowerData(view)).toEqual({
+      strokeRate: 27,
+      strokeCount: 83,
+      totalDistance: 416,
+      instantPace: 485,
+      instantPower: 70,
+      totalEnergy: 14,
+      energyPerHour: 6320,
+      energyPerMinute: 105,
+      heartRate: 0,
+      elapsedTime: 401,
+    })
+  })
+
   it('round-trips every field through the encoder', () => {
     const data = {
       strokeRate: 26.5,
