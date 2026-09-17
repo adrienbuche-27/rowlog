@@ -50,6 +50,9 @@ export interface RouteInfo {
   id: string
   name: string
   location: string
+  length_m: number
+  /** [lat, lon] waypoints, start to finish. */
+  waypoints: [number, number][]
 }
 
 export interface Split {

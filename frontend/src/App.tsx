@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { ConnectionBadge } from './components/ConnectionBadge'
 import { HistoryPage } from './pages/HistoryPage'
@@ -5,6 +6,9 @@ import { LivePage } from './pages/LivePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { SessionProvider, useSession } from './session/SessionProvider'
+
+// Pulls in Leaflet (~150 kB); split out of the main bundle since only this page needs it.
+const RoutesPage = lazy(() => import('./pages/RoutesPage').then((m) => ({ default: m.RoutesPage })))
 
 function Header() {
   const { connection, snapshot } = useSession()
@@ -23,6 +27,7 @@ function Header() {
       <nav aria-label="Main">
         <NavLink to="/" end>Row{recording && <span className="rec-dot" aria-label="recording" />}</NavLink>
         <NavLink to="/history">History</NavLink>
+        <NavLink to="/routes">Courses</NavLink>
         <NavLink to="/settings">Settings</NavLink>
       </nav>
       {!onRowPage && <ConnectionBadge info={connection} />}
@@ -39,6 +44,14 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LivePage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route
+              path="/routes"
+              element={
+                <Suspense fallback={<p className="page-message">Loading courses</p>}>
+                  <RoutesPage />
+                </Suspense>
+              }
+            />
             <Route path="/workouts/:id" element={<WorkoutPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
