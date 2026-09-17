@@ -203,6 +203,20 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .table tbody tr.is-active { background: color-mix(in srgb, var(--water) 12%, transparent); }
 
 .route-map { width: 100%; border-radius: var(--radius-control); overflow: hidden; }
+.route-map--static .leaflet-control-zoom { display: none; }
+.route-map--static .leaflet-control-attribution { font-size: 0.65rem; }
+
+.routes-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.route-card { margin-bottom: 0; }
+.route-card h2 { margin: 0.75rem 0 0.15rem; font-size: 1.05rem; }
+.route-card .hint { margin: 0; }
+.route-card-length {
+  margin: 0.4rem 0 0; font-family: var(--font-numbers); font-size: 1.3rem;
+  font-variant-numeric: tabular-nums; color: var(--foam);
+}
 
 .page-head { margin-bottom: 1.25rem; }
 .back { margin: 0 0 0.25rem; }
