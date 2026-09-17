@@ -69,8 +69,10 @@ IndexedDB outbox and sync later; `POST /api/workouts` is idempotent on `client_i
 - Styling: tokens in `frontend/src/styles.css` (`--lake`, `--water`, `--ash`…). Numbers use
   `--font-numbers` with tabular figures. Keep the split as the single dominant element on the Row page.
 - Python: ruff (line length 110), type hints, SQLAlchemy 2 typed models. TypeScript: strict.
-- No schema migrations yet: tables are created at startup. If you change `models.py`, either add
-  Alembic (see roadmap) or document that the dev database must be deleted.
+- Schema changes go through Alembic (`backend/alembic/`). After editing `models.py`, run
+  `make migration name="..."`, review the generated script, then `make migrate` (or just restart
+  the app — `init_engine()` runs migrations on startup). A pre-Alembic dev database with no
+  `alembic_version` table is auto-stamped at the baseline revision instead of re-created.
 
 ## Gotchas
 - Web Bluetooth only works in Chrome/Edge (desktop, Android) and only in a secure context:

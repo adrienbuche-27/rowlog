@@ -8,7 +8,7 @@ Ordered by value for daily use. Each item is sized to be a single Claude Code ta
 - [ ] **Bluetooth heart rate strap.** Second `BluetoothRower`-like source on the Heart Rate service
       (`0x180D`, measurement `0x2A37`); merge `heartRate` into the recorder.
 - [ ] **Auto-pause.** Pause when no stroke for N seconds, resume on the next stroke (setting).
-- [ ] **Database migrations** with Alembic before changing any model.
+- [x] **Database migrations** with Alembic before changing any model.
 
 ## Training features
 - [ ] Structured workouts: intervals by time or distance with rest, targets for split and rate,
