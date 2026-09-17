@@ -1,30 +1,34 @@
 /*
-  RowLog design tokens
-  A boathouse at dawn: deep lake water, ash wood from the WaterRower frame.
-  Numbers are set in Barlow Condensed so they read from the seat, two metres away.
+  RowLog design tokens — "Boathouse" theme
+  A regatta program on cream stock: brass, ink and burnt-orange rather than the default
+  dark lake-at-dawn theme. Same token names as the default theme (--lake, --water, --ash…)
+  so every component that reads them via cssVar() re-themes with no JS changes — only the
+  values and a handful of structural rules (sharper corners, an inverted "scoreboard"
+  split, underline tabs) change here.
 */
 :root {
-  --lake: #0e2733;      /* page */
-  --deep: #143543;      /* panels */
-  --shoal: #1b4353;     /* raised controls */
-  --line: #285566;      /* borders, grid */
-  --foam: #eaf3f2;      /* text */
-  --mist: #9ab5ba;      /* secondary text */
-  --water: #6ccbd6;     /* live data, split */
-  --ash: #d8b77a;       /* primary actions, power */
-  --reed: #a9c77f;      /* stroke rate */
-  --pulse: #e98f8f;     /* heart rate, danger */
-  --amber: #f1b44c;     /* reconnecting */
+  --lake: #f3ecdc;      /* page: parchment */
+  --deep: #fffdf8;      /* panels: card stock */
+  --shoal: #e9dfc7;     /* raised controls */
+  --line: #cabb95;      /* borders, grid */
+  --foam: #23201a;      /* text: ink */
+  --mist: #6b6455;      /* secondary text: warm ink grey */
+  --water: #b5482b;     /* live data, split: burnt orange */
+  --ash: #2f5233;       /* primary actions, power: boathouse green */
+  --reed: #7a6a2f;      /* stroke rate: brass */
+  --pulse: #9c2b1f;     /* heart rate, danger: brick red */
+  --amber: #b5482b;     /* reconnecting */
   --strava: #fc5200;
 
   --font-numbers: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-display: 'Zilla Slab', 'Georgia', serif;
   --font-text: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
 
-  --radius-control: 8px;
-  --radius-panel: 14px;
+  --radius-control: 3px;
+  --radius-panel: 4px;
   --space: 1rem;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -45,14 +49,18 @@ a:hover { color: var(--foam); }
 code { font-size: 0.9em; background: var(--shoal); padding: 0.05em 0.35em; border-radius: 4px; }
 
 h1, h2 {
-  font-family: var(--font-numbers);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
   margin: 0 0 0.75rem;
 }
-h1 { font-size: 2.2rem; }
-h2 { font-size: 1.35rem; color: var(--foam); }
+h1 { font-size: 2.15rem; }
+h2 {
+  font-size: 1.05rem; color: var(--foam);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--line);
+}
 
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 
@@ -64,24 +72,26 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .site-header {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem clamp(1rem, 3vw, 2rem);
-  border-bottom: 1px solid var(--line);
+  gap: 1.75rem;
+  padding: 0.9rem clamp(1rem, 3vw, 2rem);
+  background: var(--deep);
+  border-bottom: 2px solid var(--foam);
 }
 .brand {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  color: var(--water); text-decoration: none;
-  font-family: var(--font-numbers); font-size: 1.5rem; font-weight: 600;
+  color: var(--foam); text-decoration: none;
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 600;
 }
 .brand:hover { color: var(--water); }
-.site-header nav { display: flex; gap: 0.25rem; flex: 1; }
+.site-header nav { display: flex; gap: 1.5rem; flex: 1; }
 .site-header nav a {
   color: var(--mist); text-decoration: none;
-  padding: 0.35rem 0.75rem; border-radius: var(--radius-control);
-  position: relative;
+  padding: 0.35rem 0.05rem; position: relative;
+  font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+  border-bottom: 2px solid transparent;
 }
 .site-header nav a:hover { color: var(--foam); }
-.site-header nav a.active { color: var(--foam); background: var(--shoal); }
+.site-header nav a.active { color: var(--foam); border-bottom-color: var(--water); }
 .rec-dot {
   display: inline-block; width: 7px; height: 7px; margin-left: 0.4rem; vertical-align: middle;
   border-radius: 50%; background: var(--pulse);
@@ -96,20 +106,22 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 /* ---------- Buttons & controls ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  min-height: 2.5rem; padding: 0.4rem 1rem;
-  font: 600 0.95rem var(--font-text);
-  color: var(--foam); background: var(--shoal);
-  border: 1px solid var(--line); border-radius: var(--radius-control);
+  min-height: 2.5rem; padding: 0.4rem 1.1rem;
+  font: 600 0.85rem var(--font-text);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--foam); background: transparent;
+  border: 1.5px solid var(--foam); border-radius: var(--radius-control);
   text-decoration: none; cursor: pointer;
 }
-.btn:hover:not(:disabled) { border-color: var(--mist); color: var(--foam); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--ash); border-color: var(--ash); color: #1d1a12; }
-.btn-primary:hover:not(:disabled) { background: #e5c88f; border-color: #e5c88f; color: #1d1a12; }
-.btn-danger { color: var(--pulse); }
+.btn:hover:not(:disabled) { background: var(--foam); color: var(--deep); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--ash); border-color: var(--ash); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #24401f; border-color: #24401f; color: #fff; }
+.btn-danger { color: var(--pulse); border-color: var(--pulse); }
+.btn-danger:hover:not(:disabled) { background: var(--pulse); color: #fff; }
 .btn-strava { background: var(--strava); border-color: var(--strava); color: #fff; }
 .btn-strava:hover:not(:disabled) { color: #fff; filter: brightness(1.08); }
-.btn-large { min-height: 3.25rem; padding: 0.5rem 1.75rem; font-size: 1.1rem; }
+.btn-large { min-height: 3.25rem; padding: 0.5rem 1.75rem; font-size: 1rem; }
 
 .segmented {
   display: inline-flex; padding: 3px; gap: 2px;
@@ -186,6 +198,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   border-radius: var(--radius-panel);
   padding: 1.1rem 1.25rem;
   margin-bottom: 1rem;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--foam) 10%, transparent);
 }
 .panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
 .chart { width: 100%; }
@@ -194,7 +207,8 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .table-scroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .table th {
-  text-align: left; font-weight: 600; color: var(--mist); font-size: 0.85rem;
+  text-align: left; font-weight: 600; color: var(--mist); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
   padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
 }
 .table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); white-space: nowrap; }
@@ -211,7 +225,11 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 .route-card { margin-bottom: 0; }
-.route-card h2 { margin: 0.75rem 0 0.15rem; font-size: 1.05rem; }
+.route-card h2 {
+  margin: 0.75rem 0 0.15rem; font-size: 1.05rem;
+  text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0;
+  font-family: var(--font-display);
+}
 .route-card .hint { margin: 0; }
 .route-card-length {
   margin: 0.4rem 0 0; font-family: var(--font-numbers); font-size: 1.3rem;
@@ -223,7 +241,11 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   border-style: dashed;
   display: flex; flex-direction: column; justify-content: center;
 }
-.route-card-add h2 { margin: 0 0 0.15rem; font-size: 1.05rem; }
+.route-card-add h2 {
+  margin: 0 0 0.15rem; font-size: 1.05rem;
+  text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0;
+  font-family: var(--font-display);
+}
 .route-card-add .field { margin: 0.5rem 0 0; }
 .route-card-add input[type='text'] {
   font: inherit; color: var(--foam); background: var(--lake); width: 100%;
@@ -236,7 +258,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .back { margin: 0 0 0.25rem; }
 .totals { display: flex; flex-wrap: wrap; gap: 0.5rem 2.25rem; margin: 0; }
 .totals div { display: grid; }
-.totals dt { color: var(--mist); font-size: 0.85rem; }
+.totals dt { color: var(--mist); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 .totals dd { margin: 0; font-family: var(--font-numbers); font-size: 1.7rem; font-variant-numeric: tabular-nums; }
 
 .stack-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
@@ -260,10 +282,14 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 }
 
 /* The one loud element: the split, readable from the rowing seat. */
+/* A finish-line clock: ink block, cream digits — the loud element on the Row page. */
 .split {
   display: grid;
-  padding-bottom: 0.75rem;
-  border-bottom: 3px solid var(--water);
+  justify-items: start;
+  padding: 1.1rem 1.5rem;
+  background: var(--foam);
+  border-radius: var(--radius-panel);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--foam) 18%, transparent);
 }
 .split-value {
   font-family: var(--font-numbers);
@@ -274,9 +300,12 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   color: var(--water);
   letter-spacing: -0.01em;
 }
-.split-label { color: var(--mist); font-size: 1.05rem; margin-top: 0.4rem; }
-.split.is-stale { border-bottom-color: var(--amber); }
-.split.is-stale .split-value { color: var(--mist); }
+.split-label {
+  color: var(--lake); font-size: 0.85rem; margin-top: 0.5rem;
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+}
+.split.is-stale { background: var(--mist); }
+.split.is-stale .split-value { color: var(--deep); }
 
 .tiles {
   display: grid;
@@ -289,7 +318,10 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   overflow: hidden;
 }
 .tile { background: var(--deep); padding: 0.6rem 0.9rem; }
-.tile dt { color: var(--mist); font-size: 0.85rem; }
+.tile dt {
+  color: var(--mist); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+}
 .tile dd {
   margin: 0; font-family: var(--font-numbers); font-size: clamp(1.8rem, 3.2vw, 2.6rem);
   line-height: 1.1; font-variant-numeric: tabular-nums;
@@ -313,6 +345,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   width: min(460px, 100%); padding: 1.5rem;
   background: var(--deep); border: 1px solid var(--line); border-radius: var(--radius-panel);
 }
+.dialog h2 { text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0; font-size: 1.3rem; }
 .dialog p { margin: 0 0 0.5rem; }
 .dialog-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 

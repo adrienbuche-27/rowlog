@@ -13,7 +13,7 @@ interface Props {
   interactive?: boolean
 }
 
-const COLORS = ['#5cc9c1', '#e8b84b', '#e07a5f', '#9d8df1', '#7fb069']
+const COLORS = ['#b5482b', '#2f5233', '#7a6a2f', '#5b3a29', '#9c2b1f']
 
 export function RouteMap({ routes, selectedId, height = 420, interactive = true }: Props) {
   const host = useRef<HTMLDivElement>(null)
