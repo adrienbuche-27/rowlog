@@ -31,7 +31,11 @@ def test_update_and_delete(client, samples):
 
 def test_routes_listing_and_selecting_a_route(client, samples):
     routes = client.get("/api/routes").json()
-    assert {"id": "rotsee", "name": "Rotsee", "location": "Lucerne, Switzerland"} in routes
+    rotsee = next(r for r in routes if r["id"] == "rotsee")
+    assert rotsee["name"] == "Rotsee"
+    assert rotsee["location"] == "Lucerne, Switzerland"
+    assert 1800 <= rotsee["length_m"] <= 2200
+    assert len(rotsee["waypoints"]) >= 2
 
     wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
     assert client.get(f"/api/workouts/{wid}").json()["route_id"] is None

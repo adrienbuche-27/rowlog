@@ -103,3 +103,5 @@ class RouteInfo(BaseModel):
     id: str
     name: str
     location: str
+    length_m: float
+    waypoints: list[tuple[float, float]]
