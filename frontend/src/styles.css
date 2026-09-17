@@ -60,37 +60,95 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-/* ---------- Header ---------- */
-.site-header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem clamp(1rem, 3vw, 2rem);
-  border-bottom: 1px solid var(--line);
+/* ---------- Shell: sidebar rail + content ---------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.sidebar {
+  display: flex; flex-direction: column; gap: 1.5rem;
+  padding: 1.1rem 0.9rem;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--deep) 55%, var(--lake));
+  position: sticky; top: 0; height: 100vh;
 }
 .brand {
   display: inline-flex; align-items: center; gap: 0.5rem;
   color: var(--water); text-decoration: none;
   font-family: var(--font-numbers); font-size: 1.5rem; font-weight: 600;
+  padding: 0 0.35rem;
 }
 .brand:hover { color: var(--water); }
-.site-header nav { display: flex; gap: 0.25rem; flex: 1; }
-.site-header nav a {
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 0.15rem; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 0.6rem;
   color: var(--mist); text-decoration: none;
-  padding: 0.35rem 0.75rem; border-radius: var(--radius-control);
-  position: relative;
+  padding: 0.5rem 0.6rem; border-radius: var(--radius-control);
 }
-.site-header nav a:hover { color: var(--foam); }
-.site-header nav a.active { color: var(--foam); background: var(--shoal); }
+.sidebar-nav a svg { flex: none; opacity: 0.85; }
+.sidebar-nav a:hover { color: var(--foam); background: color-mix(in srgb, var(--shoal) 55%, transparent); }
+.sidebar-nav a.active { color: var(--foam); background: var(--shoal); }
+.sidebar-nav a.active svg { opacity: 1; color: var(--water); }
 .rec-dot {
-  display: inline-block; width: 7px; height: 7px; margin-left: 0.4rem; vertical-align: middle;
+  display: inline-block; width: 7px; height: 7px; margin-left: auto;
   border-radius: 50%; background: var(--pulse);
 }
 
-.site-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: clamp(1rem, 3vw, 2rem);
+.sidebar-foot {
+  margin-top: auto; padding: 0.75rem 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.sidebar-foot .badge { flex-wrap: wrap; gap: 0.35rem; font-size: 0.85rem; }
+
+.app-main {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1rem, 3vw, 2rem);
+}
+
+/* ---------- Master-detail workspace ---------- */
+.workspace {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.workspace-list {
+  display: flex; flex-direction: column; gap: 2px;
+  position: sticky; top: clamp(1rem, 2.5vw, 1.75rem);
+  max-height: calc(100vh - 3.5rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.workspace-list-head { margin-bottom: 0.5rem; }
+.workspace-list-head h1 { margin: 0; }
+.workspace-list-head .hint { margin: 0.1rem 0 0; }
+
+.list-item {
+  display: grid; gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid transparent; border-radius: var(--radius-control);
+  color: var(--foam); text-decoration: none;
+}
+.list-item:hover { background: color-mix(in srgb, var(--deep) 70%, transparent); color: var(--foam); }
+.list-item.is-active {
+  background: var(--deep); border-color: var(--line);
+  box-shadow: inset 3px 0 0 var(--water);
+}
+.list-item-title { font-weight: 600; }
+.list-item-meta { display: flex; gap: 0.9rem; color: var(--mist); font-size: 0.85rem; }
+.list-item-meta .num { font-family: var(--font-numbers); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.list-item-overview .list-item-meta { display: block; }
+
+.workspace-detail { min-width: 0; }
+.workspace-detail .page-message { margin: 1rem 0; }
+/* The list is the way back on wide screens, so the link only earns space when it stacks. */
+.detail-back { display: none; }
+
+.overview-grid {
+  display: grid; gap: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 /* ---------- Buttons & controls ---------- */
@@ -317,11 +375,11 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .dialog-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 
 /* ---------- History & workout ---------- */
-.history-grid, .workout-grid {
+.workout-grid {
   display: grid; gap: 0 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  align-items: start;
 }
-.workout-grid { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); align-items: start; }
 .stack { display: grid; align-content: start; }
 
 .bars {
@@ -338,11 +396,31 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .bar-label { font-size: 0.75rem; color: var(--mist); padding-top: 0.3rem; white-space: nowrap; overflow: visible; }
 
 /* ---------- Responsive ---------- */
+
+/* One pane at a time: the list until you open a workout, then the workout. */
+@media (max-width: 1080px) {
+  .workspace { grid-template-columns: 1fr; }
+  .workspace-list { position: static; max-height: none; }
+  .workspace.has-selection .workspace-list { display: none; }
+  .workspace:not(.has-selection) .workspace-detail { display: none; }
+  .detail-back { display: block; margin: 0 0 0.25rem; }
+}
+
 @media (max-width: 820px) {
   .board, .workout-grid { grid-template-columns: 1fr; }
-  .site-header { flex-wrap: wrap; gap: 0.5rem 1rem; }
-  .site-header .badge { order: 3; flex-basis: 100%; }
   .connect-actions { margin-left: 0; }
+
+  /* The rail turns into a top bar. */
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static; height: auto;
+    flex-direction: row; align-items: center; gap: 0.75rem 1rem; flex-wrap: wrap;
+    padding: 0.7rem clamp(1rem, 3vw, 2rem);
+    border-right: 0; border-bottom: 1px solid var(--line);
+  }
+  .sidebar-nav { flex-direction: row; flex-wrap: wrap; }
+  .rec-dot { margin-left: 0.4rem; }
+  .sidebar-foot { margin: 0 0 0 auto; padding: 0; border-top: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
