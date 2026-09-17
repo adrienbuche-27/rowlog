@@ -7,7 +7,7 @@ import { formatMetres } from '../lib/format'
 interface Props {
   routes: RouteInfo[]
   /** Route to highlight and pan to; shows all routes if omitted. */
-  selectedId?: string | null
+  selectedId?: number | null
   height?: number
   /** false renders a static thumbnail: no zoom/pan/scroll, for use in a grid of cards. */
   interactive?: boolean

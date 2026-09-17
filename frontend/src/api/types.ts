@@ -40,14 +40,14 @@ export interface WorkoutSummary {
   max_hr: number | null
   disconnect_s: number
   notes: string
-  route_id: string | null
+  route_id: number | null
   strava_status: StravaUploadStatus
   strava_activity_id: number | null
   strava_error: string | null
 }
 
 export interface RouteInfo {
-  id: string
+  id: number
   name: string
   location: string
   length_m: number

@@ -29,24 +29,61 @@ def test_update_and_delete(client, samples):
     assert client.get(f"/api/workouts/{wid}").status_code == 404
 
 
-def test_routes_listing_and_selecting_a_route(client, samples):
-    routes = client.get("/api/routes").json()
-    rotsee = next(r for r in routes if r["id"] == "rotsee")
-    assert rotsee["name"] == "Rotsee"
-    assert rotsee["location"] == "Lucerne, Switzerland"
-    assert 1800 <= rotsee["length_m"] <= 2200
-    assert len(rotsee["waypoints"]) >= 2
+GPX_ROTSEE = b"""<gpx><trk><trkseg>
+<trkpt lat="47.05995" lon="8.32395"/>
+<trkpt lat="47.05" lon="8.315"/>
+<trkpt lat="47.0443" lon="8.3098"/>
+</trkseg></trk></gpx>"""
 
+
+def upload_route(client, name="Rotsee", gpx=GPX_ROTSEE):
+    return client.post(
+        "/api/routes", data={"name": name}, files={"file": ("route.gpx", gpx, "application/gpx+xml")}
+    )
+
+
+def test_upload_list_and_delete_a_route(client, samples):
+    created = upload_route(client)
+    assert created.status_code == 201
+    route = created.json()
+    assert route["name"] == "Rotsee"
+    assert 1800 <= route["length_m"] <= 2200
+    assert len(route["waypoints"]) == 3
+
+    routes = client.get("/api/routes").json()
+    assert any(r["id"] == route["id"] for r in routes)
+
+    assert client.delete(f"/api/routes/{route['id']}").status_code == 204
+    assert not any(r["id"] == route["id"] for r in client.get("/api/routes").json())
+
+
+def test_uploading_a_bad_gpx_file_is_rejected(client):
+    r = upload_route(client, gpx=b"not a gpx file")
+    assert r.status_code == 400
+
+
+def test_selecting_and_clearing_a_route_on_a_workout(client, samples):
+    route = upload_route(client).json()
     wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
     assert client.get(f"/api/workouts/{wid}").json()["route_id"] is None
 
-    r = client.patch(f"/api/workouts/{wid}", json={"route_id": "rotsee"})
-    assert r.json()["route_id"] == "rotsee"
+    r = client.patch(f"/api/workouts/{wid}", json={"route_id": route["id"]})
+    assert r.json()["route_id"] == route["id"]
 
-    assert client.patch(f"/api/workouts/{wid}", json={"route_id": "not-a-route"}).status_code == 400
+    assert client.patch(f"/api/workouts/{wid}", json={"route_id": 999999}).status_code == 400
 
-    cleared = client.patch(f"/api/workouts/{wid}", json={"route_id": ""})
+    cleared = client.patch(f"/api/workouts/{wid}", json={"route_id": None})
     assert cleared.json()["route_id"] is None
+
+
+def test_deleting_a_route_clears_it_from_workouts_that_used_it(client, samples):
+    route = upload_route(client).json()
+    wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
+    client.patch(f"/api/workouts/{wid}", json={"route_id": route["id"]})
+
+    client.delete(f"/api/routes/{route['id']}")
+
+    assert client.get(f"/api/workouts/{wid}").json()["route_id"] is None
 
 
 def test_fit_download(client, samples):

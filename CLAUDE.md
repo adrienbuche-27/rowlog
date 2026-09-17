@@ -50,14 +50,20 @@ IndexedDB outbox and sync later; `POST /api/workouts` is idempotent on `client_i
 - `api/types.ts` mirrors `backend/app/schemas.py`. **Change both together.**
 
 ### Backend (`backend/app`)
-- `routers/workouts.py`, `routers/stats.py`, `routers/strava.py`
+- `routers/workouts.py`, `routers/stats.py`, `routers/strava.py`, `routers/routes.py`
 - `services/analytics.py` — pure functions: summary, 500 m splits, best time over a distance
   (sliding window with interpolation), weekly totals.
 - `services/fit_encoder.py` — hand-written FIT encoder (file_id, events, records, lap, session,
   activity). Tests decode the output with Garmin's official `garmin-fit-sdk`.
+- `services/routes.py` — GPX parsing (namespace-agnostic, downsamples long tracks) and the pure
+  geo functions (haversine, position along a route, bounce-past-the-end) that place a workout's
+  cumulative distance on a route's waypoints for the FIT export.
 - `services/strava.py` — OAuth code exchange, token refresh, upload + status polling. Takes an
   optional `httpx` transport so tests mock Strava without network.
 - Samples are stored as a JSON column on `workouts` (one dict per second).
+- Routes (virtual GPS courses) are user-uploaded GPX files, stored in the `routes` table —
+  `POST /api/routes` (multipart: `name` + `file`) parses and stores one; `workouts.route_id` is a
+  nullable FK to it, cleared by hand on delete (SQLite doesn't enforce FKs here by default).
 
 ## Conventions
 - Units everywhere: metres, seconds, watts, bpm; pace is **seconds per 500 m**.

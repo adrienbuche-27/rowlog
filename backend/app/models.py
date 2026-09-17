@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, DateTime, Float, Integer, String, Text
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -8,6 +8,20 @@ from app.db import Base
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+class Route(Base):
+    """A user-uploaded GPS course, parsed from a GPX file. See services/routes.py."""
+
+    __tablename__ = "routes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    location: Mapped[str] = mapped_column(String(200), default="")
+    length_m: Mapped[float] = mapped_column(Float)
+    # [(lat, lon), ...] extracted from the uploaded GPX, start to finish.
+    waypoints: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Workout(Base):
@@ -36,8 +50,10 @@ class Workout(Base):
     # List of sample dicts, one per second. See schemas.Sample.
     samples: Mapped[list] = mapped_column(JSON, default=list)
 
-    # Virtual GPS course to embed in FIT/Strava exports. See services/routes.py.
-    route_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # Virtual GPS course to embed in FIT/Strava exports. Not a DB-level foreign key
+    # (SQLite doesn't enforce FKs by default here) — deleting a route clears this on any
+    # workout that used it, see routers/routes.py.
+    route_id: Mapped[int | None] = mapped_column(ForeignKey("routes.id"), nullable=True)
 
     strava_upload_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     strava_activity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
