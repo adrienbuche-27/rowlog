@@ -9,11 +9,13 @@ interface Props {
   /** Route to highlight and pan to; shows all routes if omitted. */
   selectedId?: string | null
   height?: number
+  /** false renders a static thumbnail: no zoom/pan/scroll, for use in a grid of cards. */
+  interactive?: boolean
 }
 
 const COLORS = ['#5cc9c1', '#e8b84b', '#e07a5f', '#9d8df1', '#7fb069']
 
-export function RouteMap({ routes, selectedId, height = 420 }: Props) {
+export function RouteMap({ routes, selectedId, height = 420, interactive = true }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const layers = useRef<L.Layer[]>([])
@@ -21,7 +23,17 @@ export function RouteMap({ routes, selectedId, height = 420 }: Props) {
   useEffect(() => {
     const el = host.current
     if (!el) return
-    const m = L.map(el, { scrollWheelZoom: false })
+    const m = L.map(el, {
+      scrollWheelZoom: false, // always off: page scroll must win over the map
+      zoomControl: interactive,
+      dragging: interactive,
+      doubleClickZoom: interactive,
+      boxZoom: interactive,
+      keyboard: interactive,
+      touchZoom: interactive,
+      // OSM's usage terms require attribution on every map, thumbnails included.
+      attributionControl: true,
+    })
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 18,
@@ -31,7 +43,8 @@ export function RouteMap({ routes, selectedId, height = 420 }: Props) {
       m.remove()
       map.current = null
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interactive])
 
   useEffect(() => {
     const m = map.current
@@ -67,5 +80,7 @@ export function RouteMap({ routes, selectedId, height = 420 }: Props) {
     if (bounds.isValid()) m.fitBounds(bounds, { padding: [32, 32] })
   }, [routes, selectedId])
 
-  return <div ref={host} style={{ height }} className="route-map" role="img" aria-label="Rowing course map" />
+  const label = routes.length === 1 ? `Map of ${routes[0].name}` : 'Rowing course map'
+  const className = interactive ? 'route-map' : 'route-map route-map--static'
+  return <div ref={host} style={{ height }} className={className} role="img" aria-label={label} />
 }

@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { RouteInfo } from '../api/types'
-import { RouteMap } from '../components/RouteMap'
-import { formatMetres } from '../lib/format'
+import { RouteCard } from '../components/RouteCard'
 
 export function RoutesPage() {
   const [routes, setRoutes] = useState<RouteInfo[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
     api
@@ -29,33 +27,11 @@ export function RoutesPage() {
         </p>
       </header>
 
-      <section className="panel">
-        <RouteMap routes={routes} selectedId={selected} />
-      </section>
-
-      <section className="panel">
-        <div className="table-scroll">
-          <table className="table">
-            <thead>
-              <tr><th>Course</th><th>Location</th><th>Length</th></tr>
-            </thead>
-            <tbody>
-              {routes.map((r) => (
-                <tr
-                  key={r.id}
-                  className={r.id === selected ? 'is-active' : undefined}
-                  onMouseEnter={() => setSelected(r.id)}
-                  onMouseLeave={() => setSelected(null)}
-                >
-                  <td>{r.name}</td>
-                  <td>{r.location}</td>
-                  <td className="num">{formatMetres(r.length_m)} m</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <div className="routes-grid">
+        {routes.map((r) => (
+          <RouteCard key={r.id} route={r} />
+        ))}
+      </div>
     </div>
   )
 }
