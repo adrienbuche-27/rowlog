@@ -1,0 +1,22 @@
+services:
+  rowlog:
+    build: .
+    # Bound to localhost on purpose: the API has no authentication (single-user app).
+    # Web Bluetooth also requires a secure context, which http://localhost is.
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      DATABASE_URL: sqlite:////data/rowlog.db
+      STATIC_DIR: /app/frontend/dist
+      FRONTEND_URL: http://localhost:8000
+      CORS_ORIGINS: http://localhost:8000
+      STRAVA_REDIRECT_URI: http://localhost:8000/api/strava/callback
+    volumes:
+      - rowlog-data:/data
+    restart: unless-stopped
+
+volumes:
+  rowlog-data:
