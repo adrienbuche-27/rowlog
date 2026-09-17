@@ -1,30 +1,34 @@
 /*
-  RowLog design tokens
-  A boathouse at dawn: deep lake water, ash wood from the WaterRower frame.
-  Numbers are set in Barlow Condensed so they read from the seat, two metres away.
+  RowLog design tokens — "Boathouse" theme
+  A regatta program on cream stock: brass, ink and burnt-orange rather than the default
+  dark lake-at-dawn theme. Same token names as the default theme (--lake, --water, --ash…)
+  so every component that reads them via cssVar() re-themes with no JS changes — only the
+  values and a handful of structural rules (sharper corners, an inverted "scoreboard"
+  split, underline tabs) change here.
 */
 :root {
-  --lake: #0e2733;      /* page */
-  --deep: #143543;      /* panels */
-  --shoal: #1b4353;     /* raised controls */
-  --line: #285566;      /* borders, grid */
-  --foam: #eaf3f2;      /* text */
-  --mist: #9ab5ba;      /* secondary text */
-  --water: #6ccbd6;     /* live data, split */
-  --ash: #d8b77a;       /* primary actions, power */
-  --reed: #a9c77f;      /* stroke rate */
-  --pulse: #e98f8f;     /* heart rate, danger */
-  --amber: #f1b44c;     /* reconnecting */
+  --lake: #f3ecdc;      /* page: parchment */
+  --deep: #fffdf8;      /* panels: card stock */
+  --shoal: #e9dfc7;     /* raised controls */
+  --line: #cabb95;      /* borders, grid */
+  --foam: #23201a;      /* text: ink */
+  --mist: #6b6455;      /* secondary text: warm ink grey */
+  --water: #b5482b;     /* live data, split: burnt orange */
+  --ash: #2f5233;       /* primary actions, power: boathouse green */
+  --reed: #7a6a2f;      /* stroke rate: brass */
+  --pulse: #9c2b1f;     /* heart rate, danger: brick red */
+  --amber: #b5482b;     /* reconnecting */
   --strava: #fc5200;
 
   --font-numbers: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-display: 'Zilla Slab', 'Georgia', serif;
   --font-text: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
 
-  --radius-control: 8px;
-  --radius-panel: 14px;
+  --radius-control: 3px;
+  --radius-panel: 4px;
   --space: 1rem;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -45,14 +49,18 @@ a:hover { color: var(--foam); }
 code { font-size: 0.9em; background: var(--shoal); padding: 0.05em 0.35em; border-radius: 4px; }
 
 h1, h2 {
-  font-family: var(--font-numbers);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
   margin: 0 0 0.75rem;
 }
-h1 { font-size: 2.2rem; }
-h2 { font-size: 1.35rem; color: var(--foam); }
+h1 { font-size: 2.15rem; }
+h2 {
+  font-size: 1.05rem; color: var(--foam);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--line);
+}
 
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 
@@ -66,30 +74,40 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   grid-template-columns: 208px minmax(0, 1fr);
   min-height: 100vh;
 }
+/* Card stock against the parchment page, held by the same heavy ink rule the
+   rest of the theme uses to separate one sheet from another. The aside stretches
+   to the full page height; .sidebar-inner is the part that sticks. */
 .sidebar {
+  background: var(--deep);
+  border-right: 2px solid var(--foam);
+}
+.sidebar-inner {
   display: flex; flex-direction: column; gap: 1.5rem;
   padding: 1.1rem 0.9rem;
-  border-right: 1px solid var(--line);
-  background: color-mix(in srgb, var(--deep) 55%, var(--lake));
-  position: sticky; top: 0; height: 100vh;
+  position: sticky; top: 0; min-height: 100vh;
 }
 .brand {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  color: var(--water); text-decoration: none;
-  font-family: var(--font-numbers); font-size: 1.5rem; font-weight: 600;
+  color: var(--foam); text-decoration: none;
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 600;
   padding: 0 0.35rem;
 }
 .brand:hover { color: var(--water); }
 
-.sidebar-nav { display: flex; flex-direction: column; gap: 0.15rem; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 0.1rem; }
 .sidebar-nav a {
   display: flex; align-items: center; gap: 0.6rem;
   color: var(--mist); text-decoration: none;
-  padding: 0.5rem 0.6rem; border-radius: var(--radius-control);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+  /* The underline tab of the horizontal theme, stood on its end. */
+  border-left: 2px solid transparent;
 }
-.sidebar-nav a svg { flex: none; opacity: 0.85; }
-.sidebar-nav a:hover { color: var(--foam); background: color-mix(in srgb, var(--shoal) 55%, transparent); }
-.sidebar-nav a.active { color: var(--foam); background: var(--shoal); }
+.sidebar-nav a svg { flex: none; opacity: 0.7; }
+.sidebar-nav a:hover { color: var(--foam); background: color-mix(in srgb, var(--shoal) 45%, transparent); }
+.sidebar-nav a.active {
+  color: var(--foam); background: var(--shoal); border-left-color: var(--water);
+}
 .sidebar-nav a.active svg { opacity: 1; color: var(--water); }
 .rec-dot {
   display: inline-block; width: 7px; height: 7px; margin-left: auto;
@@ -115,31 +133,37 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   align-items: start;
 }
 .workspace-list {
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; flex-direction: column;
   position: sticky; top: clamp(1rem, 2.5vw, 1.75rem);
   max-height: calc(100vh - 3.5rem);
   overflow-y: auto;
   padding-right: 0.25rem;
 }
-.workspace-list-head { margin-bottom: 0.5rem; }
+.workspace-list-head { margin-bottom: 0.75rem; }
 .workspace-list-head h1 { margin: 0; }
-.workspace-list-head .hint { margin: 0.1rem 0 0; }
+.workspace-list-head .hint {
+  margin: 0.1rem 0 0;
+  text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; font-weight: 600;
+}
 
+/* Entries in a race programme: hairline-ruled rows, the open one lifted onto card stock. */
 .list-item {
-  display: grid; gap: 0.15rem;
+  display: grid; gap: 0.1rem;
   padding: 0.6rem 0.75rem;
-  border: 1px solid transparent; border-radius: var(--radius-control);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  border-left: 2px solid transparent;
   color: var(--foam); text-decoration: none;
 }
-.list-item:hover { background: color-mix(in srgb, var(--deep) 70%, transparent); color: var(--foam); }
+.list-item:hover { background: color-mix(in srgb, var(--deep) 60%, transparent); color: var(--foam); }
 .list-item.is-active {
-  background: var(--deep); border-color: var(--line);
-  box-shadow: inset 3px 0 0 var(--water);
+  background: var(--deep);
+  border-left-color: var(--water);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--foam) 8%, transparent);
 }
-.list-item-title { font-weight: 600; }
+.list-item-title { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
 .list-item-meta { display: flex; gap: 0.9rem; color: var(--mist); font-size: 0.85rem; }
-.list-item-meta .num { font-family: var(--font-numbers); font-size: 1rem; font-variant-numeric: tabular-nums; }
-.list-item-overview .list-item-meta { display: block; }
+.list-item-meta .num { font-family: var(--font-numbers); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.list-item-overview .list-item-meta { display: block; font-style: italic; }
 
 .workspace-detail { min-width: 0; }
 .workspace-detail .page-message { margin: 1rem 0; }
@@ -154,20 +178,22 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 /* ---------- Buttons & controls ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  min-height: 2.5rem; padding: 0.4rem 1rem;
-  font: 600 0.95rem var(--font-text);
-  color: var(--foam); background: var(--shoal);
-  border: 1px solid var(--line); border-radius: var(--radius-control);
+  min-height: 2.5rem; padding: 0.4rem 1.1rem;
+  font: 600 0.85rem var(--font-text);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--foam); background: transparent;
+  border: 1.5px solid var(--foam); border-radius: var(--radius-control);
   text-decoration: none; cursor: pointer;
 }
-.btn:hover:not(:disabled) { border-color: var(--mist); color: var(--foam); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--ash); border-color: var(--ash); color: #1d1a12; }
-.btn-primary:hover:not(:disabled) { background: #e5c88f; border-color: #e5c88f; color: #1d1a12; }
-.btn-danger { color: var(--pulse); }
+.btn:hover:not(:disabled) { background: var(--foam); color: var(--deep); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--ash); border-color: var(--ash); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #24401f; border-color: #24401f; color: #fff; }
+.btn-danger { color: var(--pulse); border-color: var(--pulse); }
+.btn-danger:hover:not(:disabled) { background: var(--pulse); color: #fff; }
 .btn-strava { background: var(--strava); border-color: var(--strava); color: #fff; }
 .btn-strava:hover:not(:disabled) { color: #fff; filter: brightness(1.08); }
-.btn-large { min-height: 3.25rem; padding: 0.5rem 1.75rem; font-size: 1.1rem; }
+.btn-large { min-height: 3.25rem; padding: 0.5rem 1.75rem; font-size: 1rem; }
 
 .segmented {
   display: inline-flex; padding: 3px; gap: 2px;
@@ -244,6 +270,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   border-radius: var(--radius-panel);
   padding: 1.1rem 1.25rem;
   margin-bottom: 1rem;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--foam) 10%, transparent);
 }
 .panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
 .chart { width: 100%; }
@@ -252,7 +279,8 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .table-scroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .table th {
-  text-align: left; font-weight: 600; color: var(--mist); font-size: 0.85rem;
+  text-align: left; font-weight: 600; color: var(--mist); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
   padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
 }
 .table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); white-space: nowrap; }
@@ -269,7 +297,11 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 .route-card { margin-bottom: 0; }
-.route-card h2 { margin: 0.75rem 0 0.15rem; font-size: 1.05rem; }
+.route-card h2 {
+  margin: 0.75rem 0 0.15rem; font-size: 1.05rem;
+  text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0;
+  font-family: var(--font-display);
+}
 .route-card .hint { margin: 0; }
 .route-card-length {
   margin: 0.4rem 0 0; font-family: var(--font-numbers); font-size: 1.3rem;
@@ -281,7 +313,11 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   border-style: dashed;
   display: flex; flex-direction: column; justify-content: center;
 }
-.route-card-add h2 { margin: 0 0 0.15rem; font-size: 1.05rem; }
+.route-card-add h2 {
+  margin: 0 0 0.15rem; font-size: 1.05rem;
+  text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0;
+  font-family: var(--font-display);
+}
 .route-card-add .field { margin: 0.5rem 0 0; }
 .route-card-add input[type='text'] {
   font: inherit; color: var(--foam); background: var(--lake); width: 100%;
@@ -294,7 +330,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .back { margin: 0 0 0.25rem; }
 .totals { display: flex; flex-wrap: wrap; gap: 0.5rem 2.25rem; margin: 0; }
 .totals div { display: grid; }
-.totals dt { color: var(--mist); font-size: 0.85rem; }
+.totals dt { color: var(--mist); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 .totals dd { margin: 0; font-family: var(--font-numbers); font-size: 1.7rem; font-variant-numeric: tabular-nums; }
 
 .stack-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
@@ -318,10 +354,14 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 }
 
 /* The one loud element: the split, readable from the rowing seat. */
+/* A finish-line clock: ink block, cream digits — the loud element on the Row page. */
 .split {
   display: grid;
-  padding-bottom: 0.75rem;
-  border-bottom: 3px solid var(--water);
+  justify-items: start;
+  padding: 1.1rem 1.5rem;
+  background: var(--foam);
+  border-radius: var(--radius-panel);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--foam) 18%, transparent);
 }
 .split-value {
   font-family: var(--font-numbers);
@@ -332,9 +372,12 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   color: var(--water);
   letter-spacing: -0.01em;
 }
-.split-label { color: var(--mist); font-size: 1.05rem; margin-top: 0.4rem; }
-.split.is-stale { border-bottom-color: var(--amber); }
-.split.is-stale .split-value { color: var(--mist); }
+.split-label {
+  color: var(--lake); font-size: 0.85rem; margin-top: 0.5rem;
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+}
+.split.is-stale { background: var(--mist); }
+.split.is-stale .split-value { color: var(--deep); }
 
 .tiles {
   display: grid;
@@ -347,7 +390,10 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   overflow: hidden;
 }
 .tile { background: var(--deep); padding: 0.6rem 0.9rem; }
-.tile dt { color: var(--mist); font-size: 0.85rem; }
+.tile dt {
+  color: var(--mist); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+}
 .tile dd {
   margin: 0; font-family: var(--font-numbers); font-size: clamp(1.8rem, 3.2vw, 2.6rem);
   line-height: 1.1; font-variant-numeric: tabular-nums;
@@ -371,6 +417,7 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   width: min(460px, 100%); padding: 1.5rem;
   background: var(--deep); border: 1px solid var(--line); border-radius: var(--radius-panel);
 }
+.dialog h2 { text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0; font-size: 1.3rem; }
 .dialog p { margin: 0 0 0.5rem; }
 .dialog-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 
@@ -410,15 +457,21 @@ h2 { font-size: 1.35rem; color: var(--foam); }
   .board, .workout-grid { grid-template-columns: 1fr; }
   .connect-actions { margin-left: 0; }
 
-  /* The rail turns into a top bar. */
-  .app-shell { grid-template-columns: 1fr; }
-  .sidebar {
-    position: static; height: auto;
+  /* The rail turns into a top bar, and the accent rule turns back into an underline tab. */
+  /* Stacked, the bar must hug its content — otherwise the grid hands it half the
+     leftover page height. */
+  .app-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .sidebar { border-right: 0; border-bottom: 2px solid var(--foam); }
+  .sidebar-inner {
+    position: static; min-height: 0;
     flex-direction: row; align-items: center; gap: 0.75rem 1rem; flex-wrap: wrap;
     padding: 0.7rem clamp(1rem, 3vw, 2rem);
-    border-right: 0; border-bottom: 1px solid var(--line);
   }
-  .sidebar-nav { flex-direction: row; flex-wrap: wrap; }
+  .sidebar-nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1rem; }
+  .sidebar-nav a {
+    border-left: 0; border-bottom: 2px solid transparent; background: none;
+  }
+  .sidebar-nav a.active { background: none; border-bottom-color: var(--water); }
   .rec-dot { margin-left: 0.4rem; }
   .sidebar-foot { margin: 0 0 0 auto; padding: 0; border-top: 0; }
 }
