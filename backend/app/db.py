@@ -1,10 +1,12 @@
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from alembic.config import Config
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+from alembic import command
 from app.config import get_settings
 
 
@@ -14,6 +16,28 @@ class Base(DeclarativeBase):
 
 _engine: Engine | None = None
 _session_factory: sessionmaker[Session] | None = None
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_BASELINE_REVISION = "0001"
+
+
+def _run_migrations(engine: Engine) -> None:
+    """Bring the schema to head, via Alembic, on the engine `init_engine` just built.
+
+    A database created before Alembic existed has the baseline tables but no
+    `alembic_version` row; stamp it at the baseline instead of re-running `CREATE
+    TABLE` against tables that already exist, then apply anything newer.
+    """
+    config = Config(str(_BACKEND_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(_BACKEND_DIR / "alembic"))
+
+    with engine.begin() as connection:
+        config.attributes["connection"] = connection
+        if "alembic_version" not in inspect(connection).get_table_names() and "workouts" in inspect(
+            connection
+        ).get_table_names():
+            command.stamp(config, _BASELINE_REVISION)
+        command.upgrade(config, "head")
 
 
 def init_engine(url: str | None = None) -> Engine:
@@ -31,7 +55,7 @@ def init_engine(url: str | None = None) -> Engine:
 
     from app import models  # noqa: F401  (register tables)
 
-    Base.metadata.create_all(_engine)
+    _run_migrations(_engine)
     return _engine
 
 

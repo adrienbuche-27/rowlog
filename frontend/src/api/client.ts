@@ -1,4 +1,5 @@
 import type {
+  RouteInfo,
   StatsOverview,
   StravaStatus,
   WorkoutCreate,
@@ -43,8 +44,15 @@ export const api = {
     request<WorkoutSummary>('/api/workouts', { method: 'POST', body: JSON.stringify(payload) }),
   updateNotes: (id: number, notes: string) =>
     request<WorkoutSummary>(`/api/workouts/${id}`, { method: 'PATCH', body: JSON.stringify({ notes }) }),
+  updateRoute: (id: number, routeId: string | null) =>
+    request<WorkoutSummary>(`/api/workouts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ route_id: routeId ?? '' }),
+    }),
   deleteWorkout: (id: number) => request<void>(`/api/workouts/${id}`, { method: 'DELETE' }),
   fitUrl: (id: number) => `${BASE}/api/workouts/${id}/fit`,
+
+  routes: () => request<RouteInfo[]>('/api/routes'),
 
   stats: () => request<StatsOverview>('/api/stats/overview'),
 

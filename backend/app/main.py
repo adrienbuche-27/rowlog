@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 
 from app.config import get_settings
 from app.db import init_engine
-from app.routers import stats, strava, workouts
+from app.routers import routes, stats, strava, workouts
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
     app.include_router(workouts.router)
     app.include_router(stats.router)
     app.include_router(strava.router)
+    app.include_router(routes.router)
 
     # Production: serve the built single-page app, falling back to index.html for client routes.
     static = Path(settings.static_dir)

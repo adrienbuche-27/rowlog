@@ -1,4 +1,4 @@
-.PHONY: install dev dev-backend dev-frontend test test-backend test-frontend lint build serve docker
+.PHONY: install dev dev-backend dev-frontend test test-backend test-frontend lint build serve docker migrate migration
 
 install:
 	cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
@@ -36,3 +36,12 @@ serve: build
 
 docker:
 	docker compose up --build
+
+# Apply pending Alembic migrations to $DATABASE_URL (defaults to backend/data/rowlog.db).
+# Also runs automatically on app startup, so this is mainly for CI/scripting.
+migrate:
+	cd backend && .venv/bin/alembic upgrade head
+
+# Generate a migration from model changes: make migration name="add foo column"
+migration:
+	cd backend && .venv/bin/alembic revision --autogenerate -m "$(name)"

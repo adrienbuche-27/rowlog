@@ -13,6 +13,7 @@ from app.routers.workouts import get_workout_or_404
 from app.schemas import StravaStatus, WorkoutSummary
 from app.services import analytics
 from app.services.fit_encoder import encode_rowing_activity
+from app.services.routes import ROUTES
 from app.services.strava import StravaClient, StravaError, StravaNotConnected
 
 router = APIRouter(prefix="/api", tags=["strava"])
@@ -99,7 +100,8 @@ def upload_to_strava(
         return workout
 
     summary = analytics.summarize(workout.samples)
-    fit = encode_rowing_activity(workout.started_at, workout.samples, summary)
+    route = ROUTES.get(workout.route_id) if workout.route_id else None
+    fit = encode_rowing_activity(workout.started_at, workout.samples, summary, route=route)
     km = workout.distance_m / 1000
     try:
         state = client.upload_fit(
