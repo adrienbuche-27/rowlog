@@ -1,29 +1,97 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import type uPlot from 'uplot'
 import { api } from '../api/client'
 import type { StatsOverview, WorkoutSummary } from '../api/types'
 import { UPlotChart } from '../components/UPlotChart'
-import { formatDate, formatDuration, formatKm, formatMetres, formatNumber, formatPace } from '../lib/format'
+import { WorkoutDetail } from '../components/WorkoutDetail'
+import { formatDate, formatDuration, formatKm, formatMetres, formatPace } from '../lib/format'
 import { cssVar } from '../lib/metrics'
 
+/**
+ * Master-detail workspace: the workout list stays put on the left while the pane on the
+ * right shows either all-time stats or whichever workout is open (/workouts/:id).
+ */
 export function HistoryPage() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const selectedId = id ? Number(id) : null
+
   const [stats, setStats] = useState<StatsOverview | null>(null)
   const [workouts, setWorkouts] = useState<WorkoutSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    Promise.all([api.stats(), api.listWorkouts()])
-      .then(([st, ws]) => {
+  const load = useCallback(
+    () =>
+      Promise.all([api.stats(), api.listWorkouts()]).then(([st, ws]) => {
         setStats(st)
         setWorkouts(ws)
-      })
-      .catch(() => setError("The server can't be reached. Start the backend, then reload this page."))
-  }, [])
+      }),
+    [],
+  )
+
+  useEffect(() => {
+    load().catch(() => setError("The server can't be reached. Start the backend, then reload this page."))
+  }, [load])
 
   if (error) return <p className="error page-message">{error}</p>
   if (!stats || !workouts) return <p className="page-message">Loading history</p>
-  if (workouts.length === 0) {
+
+  return (
+    <div className={`workspace ${selectedId ? 'has-selection' : ''}`}>
+      <div className="workspace-list">
+        <div className="workspace-list-head">
+          <h1>History</h1>
+          <p className="hint">{stats.total_workouts} workouts · {formatKm(stats.total_distance_m)}</p>
+        </div>
+
+        <Link to="/history" className={`list-item list-item-overview ${selectedId ? '' : 'is-active'}`}>
+          <span className="list-item-title">All-time summary</span>
+          <span className="list-item-meta">Volume, trend and best times</span>
+        </Link>
+
+        {workouts.length === 0 ? (
+          <p className="empty">
+            No workouts yet. <Link to="/">Start one</Link>
+          </p>
+        ) : (
+          workouts.map((w) => (
+            <Link
+              key={w.id}
+              to={`/workouts/${w.id}`}
+              className={`list-item ${w.id === selectedId ? 'is-active' : ''}`}
+            >
+              <span className="list-item-title">{formatDate(w.started_at)}</span>
+              <span className="list-item-meta">
+                <span className="num">{formatMetres(w.distance_m)} m</span>
+                <span className="num">{formatDuration(w.duration_s)}</span>
+                <span className="num">{formatPace(w.avg_split_s)}</span>
+              </span>
+            </Link>
+          ))
+        )}
+      </div>
+
+      <div className="workspace-detail">
+        {selectedId ? (
+          <WorkoutDetail
+            key={selectedId}
+            workoutId={selectedId}
+            onDeleted={() => {
+              load()
+              navigate('/history')
+            }}
+          />
+        ) : (
+          <Overview stats={stats} hasWorkouts={workouts.length > 0} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Overview({ stats, hasWorkouts }: { stats: StatsOverview; hasWorkouts: boolean }) {
+  if (!hasWorkouts) {
     return (
       <div className="page-message">
         <h1>No workouts yet</h1>
@@ -36,9 +104,9 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="history">
+    <div className="overview">
       <header className="page-head">
-        <h1>History</h1>
+        <h1>All-time summary</h1>
         <dl className="totals">
           <div><dt>Total distance</dt><dd>{formatKm(stats.total_distance_m)}</dd></div>
           <div><dt>Time rowed</dt><dd>{formatDuration(stats.total_duration_s)}</dd></div>
@@ -46,12 +114,12 @@ export function HistoryPage() {
         </dl>
       </header>
 
-      <div className="history-grid">
-        <section className="panel">
-          <h2>Distance per week, in km</h2>
-          <WeeklyBars weeks={stats.weekly} />
-        </section>
+      <section className="panel">
+        <h2>Distance per week, in km</h2>
+        <WeeklyBars weeks={stats.weekly} />
+      </section>
 
+      <div className="overview-grid">
         <section className="panel">
           <h2>Average split per workout</h2>
           {stats.split_trend.length > 1 ? (
@@ -84,38 +152,9 @@ export function HistoryPage() {
           )}
         </section>
       </div>
-
-      <section className="panel">
-        <h2>Workouts</h2>
-        <div className="table-scroll">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Date</th><th>Distance</th><th>Time</th><th>Split</th>
-                <th>Rate</th><th>Power</th><th>Strava</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workouts.map((w) => (
-                <tr key={w.id}>
-                  <td><Link to={`/workouts/${w.id}`}>{formatDate(w.started_at)}</Link></td>
-                  <td className="num">{formatMetres(w.distance_m)} m</td>
-                  <td className="num">{formatDuration(w.duration_s)}</td>
-                  <td className="num">{formatPace(w.avg_split_s)}</td>
-                  <td className="num">{formatNumber(w.avg_spm)}</td>
-                  <td className="num">{formatNumber(w.avg_power_w)} W</td>
-                  <td>{STRAVA_LABELS[w.strava_status]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   )
 }
-
-const STRAVA_LABELS = { none: '', processing: 'Uploading', done: 'Uploaded', error: 'Failed' }
 
 function WeeklyBars({ weeks }: { weeks: StatsOverview['weekly'] }) {
   const max = Math.max(...weeks.map((w) => w.distance_m), 1)

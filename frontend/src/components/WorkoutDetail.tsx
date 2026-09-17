@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { api } from '../api/client'
-import type { RouteInfo, WorkoutDetail } from '../api/types'
-import { MetricChart } from '../components/MetricChart'
-import { MetricTabs } from '../components/MetricTabs'
+import type { RouteInfo, WorkoutDetail as Detail } from '../api/types'
 import { formatDateTime, formatDuration, formatMetres, formatNumber, formatPace } from '../lib/format'
 import type { MetricKey } from '../lib/metrics'
+import { MetricChart } from './MetricChart'
+import { MetricTabs } from './MetricTabs'
 
-export function WorkoutPage() {
-  const { id } = useParams()
-  const workoutId = Number(id)
-  const navigate = useNavigate()
-  const [workout, setWorkout] = useState<WorkoutDetail | null>(null)
+interface Props {
+  workoutId: number
+  /** Called after the workout is deleted, so the workspace can refresh and deselect. */
+  onDeleted: () => void
+}
+
+export function WorkoutDetail({ workoutId, onDeleted }: Props) {
+  const [workout, setWorkout] = useState<Detail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [metric, setMetric] = useState<MetricKey>('pace')
   const [notes, setNotes] = useState('')
@@ -21,11 +24,14 @@ export function WorkoutPage() {
   const [routeBusy, setRouteBusy] = useState(false)
 
   useEffect(() => {
+    setWorkout(null)
+    setError(null)
     api
       .getWorkout(workoutId)
       .then((w) => {
         setWorkout(w)
         setNotes(w.notes)
+        setNotesSaved(true)
       })
       .catch((e) => setError(e.status === 404 ? 'This workout no longer exists.' : "The server can't be reached."))
     api.routes().then(setRoutes).catch(() => setRoutes([]))
@@ -46,7 +52,7 @@ export function WorkoutPage() {
     return () => clearInterval(timer)
   }, [stravaStatus, workoutId])
 
-  if (error) return <p className="error page-message">{error} <Link to="/history">Back to history</Link></p>
+  if (error) return <p className="error page-message">{error}</p>
   if (!workout) return <p className="page-message">Loading workout</p>
 
   const hasHr = workout.samples.some((s) => s.hr)
@@ -82,13 +88,13 @@ export function WorkoutPage() {
   async function remove() {
     if (!confirm('Delete this workout? This cannot be undone. Activities already on Strava stay there.')) return
     await api.deleteWorkout(workoutId)
-    navigate('/history')
+    onDeleted()
   }
 
   return (
     <div className="workout">
       <header className="page-head">
-        <p className="back"><Link to="/history">History</Link></p>
+        <p className="detail-back"><Link to="/history">All workouts</Link></p>
         <h1>{formatDateTime(workout.started_at)}</h1>
         <dl className="totals">
           <div><dt>Distance</dt><dd>{formatMetres(workout.distance_m)} m</dd></div>
@@ -115,7 +121,7 @@ export function WorkoutPage() {
             available={hasHr ? ['pace', 'power', 'spm', 'hr'] : ['pace', 'power', 'spm']}
           />
         </div>
-        <MetricChart samples={workout.samples} metric={metric} height={280} />
+        <MetricChart samples={workout.samples} metric={metric} height={240} />
       </section>
 
       <div className="workout-grid">
@@ -206,7 +212,7 @@ function StravaAction({
   busy,
   onUpload,
 }: {
-  workout: WorkoutDetail
+  workout: Detail
   busy: boolean
   onUpload: () => void
 }) {
