@@ -36,6 +36,9 @@ class Workout(Base):
     # List of sample dicts, one per second. See schemas.Sample.
     samples: Mapped[list] = mapped_column(JSON, default=list)
 
+    # Virtual GPS course to embed in FIT/Strava exports. See services/routes.py.
+    route_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
     strava_upload_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     strava_activity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # none | processing | done | error

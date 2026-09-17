@@ -13,14 +13,19 @@ import struct
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-FIT_EPOCH = 631065600  # 1989-12-31T00:00:00Z in unix seconds
+from app.services.routes import Route, position_at
 
-# Base types: (code, struct format, invalid value)
+FIT_EPOCH = 631065600  # 1989-12-31T00:00:00Z in unix seconds
+SEMICIRCLE = (1 << 31) / 180  # degrees -> FIT semicircles
+
+# Base types: (code, struct format, invalid value). Uppercase struct formats (B, H, I) are
+# unsigned; lowercase (i) is signed — see _Message.data's clamp, which relies on that.
 ENUM = (0x00, "B", 0xFF)
 UINT8 = (0x02, "B", 0xFF)
 UINT16 = (0x84, "H", 0xFFFF)
 UINT32 = (0x86, "I", 0xFFFFFFFF)
 UINT32Z = (0x8C, "I", 0x00000000)
+SINT32 = (0x85, "i", 0x7FFFFFFF)
 
 SPORT_ROWING = 15
 SUB_SPORT_INDOOR_ROWING = 14
@@ -72,7 +77,11 @@ class _Message:
             else:
                 v = int(round(v))
                 # Clamp into the type's range so an outlier never corrupts the file.
-                v = max(0, min(v, (1 << (8 * struct.calcsize(fmt))) - 2))
+                bits = 8 * struct.calcsize(fmt)
+                if fmt.isupper():  # unsigned
+                    v = max(0, min(v, (1 << bits) - 2))
+                else:  # signed
+                    v = max(-(1 << (bits - 1)), min(v, (1 << (bits - 1)) - 1))
             out += struct.pack("<" + fmt, v)
         return out
 
@@ -81,7 +90,10 @@ FILE_ID = _Message(0, 0, [(0, ENUM), (1, UINT16), (2, UINT16), (3, UINT32Z), (4,
 EVENT = _Message(1, 21, [(253, UINT32), (0, ENUM), (1, ENUM)])
 RECORD = _Message(
     2, 20,
-    [(253, UINT32), (5, UINT32), (6, UINT16), (7, UINT16), (3, UINT8), (4, UINT8), (33, UINT16)],
+    [
+        (253, UINT32), (0, SINT32), (1, SINT32), (5, UINT32), (6, UINT16), (7, UINT16),
+        (3, UINT8), (4, UINT8), (33, UINT16),
+    ],
 )
 LAP = _Message(
     3, 19,
@@ -111,10 +123,14 @@ def _speed(pace_s_per_500: float | None) -> float | None:
     return 500 / pace_s_per_500 * 1000
 
 
-def encode_rowing_activity(started_at: datetime, samples: Sequence[dict], summary: dict) -> bytes:
+def encode_rowing_activity(
+    started_at: datetime, samples: Sequence[dict], summary: dict, route: Route | None = None
+) -> bytes:
     """Build a complete .fit file.
 
-    `samples` are per-second dicts (schemas.Sample), `summary` is analytics.summarize().
+    `samples` are per-second dicts (schemas.Sample), `summary` is analytics.summarize(). When
+    `route` is given, each record carries a lat/lon walked along that course by the sample's
+    cumulative distance, so Strava/Garmin Connect draw a virtual map for the activity.
     """
     if not samples:
         raise ValueError("cannot encode a workout without samples")
@@ -134,9 +150,12 @@ def encode_rowing_activity(started_at: datetime, samples: Sequence[dict], summar
     body += EVENT.data({253: start, 0: 0, 1: 0})  # timer, start
 
     for s in samples:
+        lat, lon = position_at(route, float(s.get("distance") or 0)) if route else (None, None)
         body += RECORD.data(
             {
                 253: start + int(round(float(s["t"]))),
+                0: lat * SEMICIRCLE if lat is not None else None,
+                1: lon * SEMICIRCLE if lon is not None else None,
                 5: float(s.get("distance") or 0) * 100,
                 6: _speed(s.get("pace")),
                 7: s.get("power"),

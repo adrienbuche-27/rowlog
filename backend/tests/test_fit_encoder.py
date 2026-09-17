@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
 
+import pytest
 from garmin_fit_sdk import Decoder, Stream
 
 from app.services import analytics
 from app.services.fit_encoder import encode_rowing_activity, fit_crc
+from app.services.routes import ROUTES, position_at
 
 
 def decode(data: bytes):
@@ -51,3 +53,26 @@ def test_missing_values_are_encoded_as_invalid(samples):
         encode_rowing_activity(datetime(2026, 9, 14, tzinfo=UTC), samples, analytics.summarize(samples))
     )
     assert "heart_rate" not in messages["record_mesgs"][10]
+
+
+def test_records_have_no_position_without_a_route(samples):
+    messages = decode(
+        encode_rowing_activity(datetime(2026, 9, 14, tzinfo=UTC), samples, analytics.summarize(samples))
+    )
+    assert "position_lat" not in messages["record_mesgs"][0]
+    assert "position_long" not in messages["record_mesgs"][0]
+
+
+def test_records_carry_the_route_position(samples):
+    route = ROUTES["rotsee"]
+    messages = decode(
+        encode_rowing_activity(
+            datetime(2026, 9, 14, tzinfo=UTC), samples, analytics.summarize(samples), route=route
+        )
+    )
+    semicircle_to_deg = 180 / (1 << 31)
+    records = messages["record_mesgs"]
+    for sample, record in zip(samples, records, strict=True):
+        expected_lat, expected_lon = position_at(route, sample["distance"])
+        assert record["position_lat"] * semicircle_to_deg == pytest.approx(expected_lat, abs=1e-4)
+        assert record["position_long"] * semicircle_to_deg == pytest.approx(expected_lon, abs=1e-4)

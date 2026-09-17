@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
-import type { WorkoutDetail } from '../api/types'
+import type { RouteInfo, WorkoutDetail } from '../api/types'
 import { MetricChart } from '../components/MetricChart'
 import { MetricTabs } from '../components/MetricTabs'
 import { formatDateTime, formatDuration, formatMetres, formatNumber, formatPace } from '../lib/format'
@@ -17,6 +17,8 @@ export function WorkoutPage() {
   const [notes, setNotes] = useState('')
   const [notesSaved, setNotesSaved] = useState(true)
   const [stravaBusy, setStravaBusy] = useState(false)
+  const [routes, setRoutes] = useState<RouteInfo[]>([])
+  const [routeBusy, setRouteBusy] = useState(false)
 
   useEffect(() => {
     api
@@ -26,6 +28,7 @@ export function WorkoutPage() {
         setNotes(w.notes)
       })
       .catch((e) => setError(e.status === 404 ? 'This workout no longer exists.' : "The server can't be reached."))
+    api.routes().then(setRoutes).catch(() => setRoutes([]))
   }, [workoutId])
 
   // Poll while Strava processes the upload.
@@ -64,6 +67,16 @@ export function WorkoutPage() {
   async function saveNotes() {
     await api.updateNotes(workoutId, notes)
     setNotesSaved(true)
+  }
+
+  async function changeRoute(routeId: string) {
+    setRouteBusy(true)
+    try {
+      const updated = await api.updateRoute(workoutId, routeId || null)
+      setWorkout((w) => (w ? { ...w, ...updated } : w))
+    } finally {
+      setRouteBusy(false)
+    }
   }
 
   async function remove() {
@@ -132,6 +145,25 @@ export function WorkoutPage() {
         <div className="stack">
           <section className="panel">
             <h2>Export</h2>
+            <label className="field">
+              <span>Row it somewhere</span>
+              <select
+                value={workout.route_id ?? ''}
+                disabled={routeBusy}
+                onChange={(e) => changeRoute(e.target.value)}
+              >
+                <option value="">No location (indoor)</option>
+                {routes.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} — {r.location}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="hint">
+              Adds a virtual GPS track along the chosen course to the FIT file, so Strava and Garmin Connect
+              show a map for this row.
+            </p>
             <div className="stack-actions">
               <a className="btn" href={api.fitUrl(workoutId)} download>
                 Download FIT file

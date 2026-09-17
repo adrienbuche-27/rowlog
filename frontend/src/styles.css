@@ -125,14 +125,14 @@ h2 { font-size: 1.35rem; color: var(--foam); }
 .segmented button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .select { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--mist); font-size: 0.9rem; }
-.select select, .field textarea {
+.select select, .field textarea, .field select {
   font: inherit; color: var(--foam); background: var(--lake);
   border: 1px solid var(--line); border-radius: var(--radius-control); padding: 0.35rem 0.5rem;
 }
 .select input[type='range'] { accent-color: var(--water); }
 .field { display: grid; gap: 0.35rem; margin: 0.75rem 0; }
 .field span { color: var(--mist); font-size: 0.9rem; }
-.field textarea { width: 100%; resize: vertical; }
+.field textarea, .field select { width: 100%; resize: vertical; }
 
 .toggle { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem 0; cursor: pointer; }
 .toggle input { position: absolute; opacity: 0; }

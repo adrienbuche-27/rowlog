@@ -9,6 +9,7 @@ from app.models import Workout
 from app.schemas import WorkoutCreate, WorkoutDetail, WorkoutSummary, WorkoutUpdate
 from app.services import analytics
 from app.services.fit_encoder import encode_rowing_activity
+from app.services.routes import ROUTES
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
@@ -71,6 +72,10 @@ def update_workout(workout_id: int, payload: WorkoutUpdate, db: Session = Depend
     workout = get_workout_or_404(db, workout_id)
     if payload.notes is not None:
         workout.notes = payload.notes
+    if payload.route_id is not None:
+        if payload.route_id != "" and payload.route_id not in ROUTES:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Unknown route")
+        workout.route_id = payload.route_id or None
     db.commit()
     return workout
 
@@ -84,7 +89,10 @@ def delete_workout(workout_id: int, db: Session = Depends(get_db)):
 @router.get("/{workout_id}/fit")
 def download_fit(workout_id: int, db: Session = Depends(get_db)):
     workout = get_workout_or_404(db, workout_id)
-    data = encode_rowing_activity(workout.started_at, workout.samples, analytics.summarize(workout.samples))
+    route = ROUTES.get(workout.route_id) if workout.route_id else None
+    data = encode_rowing_activity(
+        workout.started_at, workout.samples, analytics.summarize(workout.samples), route=route
+    )
     filename = f"row-{workout.started_at:%Y%m%d-%H%M}.fit"
     return Response(
         content=data,

@@ -29,6 +29,22 @@ def test_update_and_delete(client, samples):
     assert client.get(f"/api/workouts/{wid}").status_code == 404
 
 
+def test_routes_listing_and_selecting_a_route(client, samples):
+    routes = client.get("/api/routes").json()
+    assert {"id": "rotsee", "name": "Rotsee", "location": "Lucerne, Switzerland"} in routes
+
+    wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
+    assert client.get(f"/api/workouts/{wid}").json()["route_id"] is None
+
+    r = client.patch(f"/api/workouts/{wid}", json={"route_id": "rotsee"})
+    assert r.json()["route_id"] == "rotsee"
+
+    assert client.patch(f"/api/workouts/{wid}", json={"route_id": "not-a-route"}).status_code == 400
+
+    cleared = client.patch(f"/api/workouts/{wid}", json={"route_id": ""})
+    assert cleared.json()["route_id"] is None
+
+
 def test_fit_download(client, samples):
     wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
     r = client.get(f"/api/workouts/{wid}/fit")
