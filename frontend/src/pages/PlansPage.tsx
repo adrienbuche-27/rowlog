@@ -23,6 +23,7 @@ export function PlansPage() {
   const [plans, setPlans] = useState<PlanInfo[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   useEffect(() => {
     api
@@ -60,29 +61,51 @@ export function PlansPage() {
       {error && <p className="error">{error}</p>}
 
       <div className="routes-grid">
-        {plans.map((plan) => (
-          <article key={plan.id} className="panel plan-card">
-            <h2>{plan.name}</h2>
-            <p className="hint">{plan.pieces.length} pieces · {summarise(plan.pieces)}</p>
-            <ol className="plan-pieces">
-              {plan.pieces.map((piece, i) => (
-                <li key={i}>
-                  <span className="num">{describe(piece)}</span>
-                  {i < plan.pieces.length - 1 && piece.rest_s > 0 && (
-                    <span className="plan-rest">rest {formatDuration(piece.rest_s)}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
-            <button
-              className="btn btn-danger route-card-delete"
-              onClick={() => remove(plan)}
-              disabled={deletingId === plan.id}
-            >
-              {deletingId === plan.id ? 'Deleting…' : 'Delete'}
-            </button>
-          </article>
-        ))}
+        {plans.map((plan) =>
+          editingId === plan.id ? (
+            <article key={plan.id} className="panel plan-card">
+              <h2>{plan.name}</h2>
+              <PlanForm
+                initialName={plan.name}
+                initialPieces={plan.pieces}
+                submitLabel="Save changes"
+                onSubmit={({ name, pieces }) => api.updatePlan(plan.id, { name, pieces })}
+                onSuccess={(updated) => {
+                  setPlans((ps) => ps?.map((p) => (p.id === updated.id ? updated : p)) ?? ps)
+                  setEditingId(null)
+                  setError(null)
+                }}
+                onError={setError}
+                onCancel={() => setEditingId(null)}
+              />
+            </article>
+          ) : (
+            <article key={plan.id} className="panel plan-card">
+              <h2>{plan.name}</h2>
+              <p className="hint">{plan.pieces.length} pieces · {summarise(plan.pieces)}</p>
+              <ol className="plan-pieces">
+                {plan.pieces.map((piece, i) => (
+                  <li key={i}>
+                    <span className="num">{describe(piece)}</span>
+                    {i < plan.pieces.length - 1 && piece.rest_s > 0 && (
+                      <span className="plan-rest">rest {formatDuration(piece.rest_s)}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              <div className="plan-card-actions">
+                <button className="btn" onClick={() => setEditingId(plan.id)}>Edit</button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => remove(plan)}
+                  disabled={deletingId === plan.id}
+                >
+                  {deletingId === plan.id ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </article>
+          ),
+        )}
         <AddPlanCard
           onAdded={(plan) => {
             setPlans((ps) => [...(ps ?? []), plan])
@@ -97,15 +120,30 @@ export function PlansPage() {
 
 const emptyPiece = (): PlanPiece => ({ kind: 'distance', target: 500, rest_s: 60 })
 
-function AddPlanCard({
-  onAdded,
+/** The name + pieces editor, shared by "build a new session" and "edit this session". */
+function PlanForm({
+  initialName = '',
+  initialPieces,
+  submitLabel,
+  resetAfterSubmit = false,
+  onSubmit,
+  onSuccess,
   onError,
+  onCancel,
 }: {
-  onAdded: (plan: PlanInfo) => void
+  initialName?: string
+  initialPieces?: PlanPiece[]
+  submitLabel: string
+  resetAfterSubmit?: boolean
+  onSubmit: (payload: { name: string; pieces: PlanPiece[] }) => Promise<PlanInfo>
+  onSuccess: (plan: PlanInfo) => void
   onError: (message: string) => void
+  onCancel?: () => void
 }) {
-  const [name, setName] = useState('')
-  const [pieces, setPieces] = useState<PlanPiece[]>([emptyPiece()])
+  const [name, setName] = useState(initialName)
+  const [pieces, setPieces] = useState<PlanPiece[]>(
+    initialPieces && initialPieces.length > 0 ? initialPieces : [emptyPiece()],
+  )
   const [busy, setBusy] = useState(false)
 
   function patch(index: number, change: Partial<PlanPiece>) {
@@ -117,10 +155,12 @@ function AddPlanCard({
     if (!name.trim() || pieces.some((p) => p.target <= 0)) return
     setBusy(true)
     try {
-      const plan = await api.createPlan({ name: name.trim(), pieces })
-      onAdded(plan)
-      setName('')
-      setPieces([emptyPiece()])
+      const plan = await onSubmit({ name: name.trim(), pieces })
+      onSuccess(plan)
+      if (resetAfterSubmit) {
+        setName('')
+        setPieces([emptyPiece()])
+      }
     } catch (err) {
       onError(err instanceof ApiError ? err.message : "Couldn't save this session.")
     } finally {
@@ -129,67 +169,90 @@ function AddPlanCard({
   }
 
   return (
-    <article className="panel route-card route-card-add plan-card-add">
-      <h2>Build a session</h2>
-      <form onSubmit={submit}>
-        <label className="field">
-          <span className="visually-hidden">Session name</span>
+    <form onSubmit={submit}>
+      <label className="field">
+        <span className="visually-hidden">Session name</span>
+        <input
+          type="text"
+          placeholder="Session name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={200}
+        />
+      </label>
+
+      {pieces.map((piece, i) => (
+        <div key={i} className="plan-editor-row">
+          <select
+            aria-label={`Piece ${i + 1} type`}
+            value={piece.kind}
+            onChange={(e) => patch(i, { kind: e.target.value as PieceKind })}
+          >
+            <option value="distance">Distance (m)</option>
+            <option value="time">Time (s)</option>
+          </select>
           <input
-            type="text"
-            placeholder="Session name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={200}
+            type="number"
+            aria-label={`Piece ${i + 1} target`}
+            min={1}
+            value={piece.target}
+            onChange={(e) => patch(i, { target: Number(e.target.value) })}
           />
-        </label>
-
-        {pieces.map((piece, i) => (
-          <div key={i} className="plan-editor-row">
-            <select
-              aria-label={`Piece ${i + 1} type`}
-              value={piece.kind}
-              onChange={(e) => patch(i, { kind: e.target.value as PieceKind })}
-            >
-              <option value="distance">Distance (m)</option>
-              <option value="time">Time (s)</option>
-            </select>
-            <input
-              type="number"
-              aria-label={`Piece ${i + 1} target`}
-              min={1}
-              value={piece.target}
-              onChange={(e) => patch(i, { target: Number(e.target.value) })}
-            />
-            <input
-              type="number"
-              aria-label={`Piece ${i + 1} rest in seconds`}
-              min={0}
-              value={piece.rest_s}
-              onChange={(e) => patch(i, { rest_s: Number(e.target.value) })}
-              title="Rest after this piece, in seconds"
-            />
-            <button
-              type="button"
-              className="btn plan-editor-remove"
-              onClick={() => setPieces((ps) => ps.filter((_, n) => n !== i))}
-              disabled={pieces.length === 1}
-              aria-label={`Remove piece ${i + 1}`}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <p className="hint">Target, then rest in seconds. Rest after the last piece is ignored.</p>
-
-        <div className="stack-actions">
-          <button type="button" className="btn" onClick={() => setPieces((ps) => [...ps, emptyPiece()])}>
-            Add piece
-          </button>
-          <button className="btn btn-primary" type="submit" disabled={busy || !name.trim()}>
-            {busy ? 'Saving…' : 'Save session'}
+          <input
+            type="number"
+            aria-label={`Piece ${i + 1} rest in seconds`}
+            min={0}
+            value={piece.rest_s}
+            onChange={(e) => patch(i, { rest_s: Number(e.target.value) })}
+            title="Rest after this piece, in seconds"
+          />
+          <button
+            type="button"
+            className="btn plan-editor-remove"
+            onClick={() => setPieces((ps) => ps.filter((_, n) => n !== i))}
+            disabled={pieces.length === 1}
+            aria-label={`Remove piece ${i + 1}`}
+          >
+            ×
           </button>
         </div>
-      </form>
+      ))}
+      <p className="hint">Target, then rest in seconds. Rest after the last piece is ignored.</p>
+
+      <div className="stack-actions">
+        <button type="button" className="btn" onClick={() => setPieces((ps) => [...ps, emptyPiece()])}>
+          Add piece
+        </button>
+        <button className="btn btn-primary" type="submit" disabled={busy || !name.trim()}>
+          {busy ? 'Saving…' : submitLabel}
+        </button>
+        {onCancel && (
+          <button type="button" className="btn" onClick={onCancel} disabled={busy}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}
+
+function AddPlanCard({
+  onAdded,
+  onError,
+}: {
+  onAdded: (plan: PlanInfo) => void
+  onError: (message: string) => void
+}) {
+  return (
+    <article className="panel route-card route-card-add plan-card-add">
+      <h2>Build a session</h2>
+      <PlanForm
+        submitLabel="Save session"
+        resetAfterSubmit
+        onSubmit={({ name, pieces }) => api.createPlan({ name, pieces })}
+        onSuccess={onAdded}
+        onError={onError}
+      />
     </article>
   )
 }

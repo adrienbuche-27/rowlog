@@ -182,6 +182,23 @@ def test_create_list_and_delete_a_plan(client):
     assert client.delete(f"/api/plans/{plan['id']}").status_code == 404
 
 
+def test_update_a_plan(client):
+    plan = client.post("/api/plans", json=PLAN_4x1000).json()
+
+    updated = client.put(
+        f"/api/plans/{plan['id']}",
+        json={"name": "5x1000m / 3min", "pieces": [{"kind": "distance", "target": 1000, "rest_s": 180}]},
+    )
+    assert updated.status_code == 200
+    body = updated.json()
+    assert body["id"] == plan["id"]
+    assert body["name"] == "5x1000m / 3min"
+    assert len(body["pieces"]) == 1
+
+    assert client.get("/api/plans").json()[0]["name"] == "5x1000m / 3min"
+    assert client.put("/api/plans/999999", json=PLAN_4x1000).status_code == 404
+
+
 def test_a_plan_needs_at_least_one_valid_piece(client):
     assert client.post("/api/plans", json={"name": "Empty", "pieces": []}).status_code == 422
     bad_target = {"name": "Bad", "pieces": [{"kind": "distance", "target": 0, "rest_s": 0}]}

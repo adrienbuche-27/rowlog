@@ -325,12 +325,17 @@ h2 {
 }
 .route-card-add input[type='file'] { font-size: 0.85rem; color: var(--mist); }
 
+/* Flex column so the Edit/Delete row can be pinned to the bottom of every card,
+   regardless of how many pieces the session above it lists. */
+.plan-card { display: flex; flex-direction: column; }
 .plan-card h2 { font-family: var(--font-display); text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0; font-size: 1.05rem; margin-bottom: 0.1rem; }
 .plan-card .hint { margin: 0 0 0.5rem; }
 .plan-pieces { margin: 0 0 0.5rem; padding-left: 1.2rem; }
 .plan-pieces li { margin-bottom: 0.15rem; }
 .plan-pieces .num { font-family: var(--font-numbers); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .plan-rest { color: var(--mist); font-size: 0.85rem; margin-left: 0.5rem; }
+.plan-card-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.75rem; }
+.plan-card-actions .btn { flex: 1; }
 
 /* The piece editor needs three fields on a row, which does not fit one card column. */
 .plan-card-add { justify-content: flex-start; grid-column: span 2; }

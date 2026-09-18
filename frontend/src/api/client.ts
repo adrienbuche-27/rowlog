@@ -60,6 +60,8 @@ export const api = {
   plans: () => request<PlanInfo[]>('/api/plans'),
   createPlan: (payload: PlanCreate) =>
     request<PlanInfo>('/api/plans', { method: 'POST', body: JSON.stringify(payload) }),
+  updatePlan: (id: number, payload: PlanCreate) =>
+    request<PlanInfo>(`/api/plans/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deletePlan: (id: number) => request<void>(`/api/plans/${id}`, { method: 'DELETE' }),
 
   routes: () => request<RouteInfo[]>('/api/routes'),

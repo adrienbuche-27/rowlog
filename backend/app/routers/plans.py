@@ -30,6 +30,16 @@ def create_plan(payload: PlanCreate, db: Session = Depends(get_db)):
     return plan
 
 
+@router.put("/{plan_id}", response_model=PlanInfo)
+def update_plan(plan_id: int, payload: PlanCreate, db: Session = Depends(get_db)):
+    plan = get_plan_or_404(db, plan_id)
+    plan.name = payload.name
+    plan.pieces = [p.model_dump() for p in payload.pieces]
+    db.commit()
+    db.refresh(plan)
+    return plan
+
+
 @router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_plan(plan_id: int, db: Session = Depends(get_db)):
     plan = get_plan_or_404(db, plan_id)
