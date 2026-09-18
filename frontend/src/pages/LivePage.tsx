@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ConnectionBadge } from '../components/ConnectionBadge'
 import { MetricChart } from '../components/MetricChart'
@@ -15,11 +15,48 @@ export function LivePage() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+  const savingRef = useRef(saving)
+  savingRef.current = saving
 
   const { snapshot: snap, connection } = s
   const connected = connection.state === 'connected'
   const busy = connection.state === 'connecting'
   const inWorkout = snap.status === 'recording' || snap.status === 'paused'
+
+  useEffect(() => {
+    if (!confirming) return
+    dialogRef.current?.focus()
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (!savingRef.current) setConfirming(false)
+        return
+      }
+      const dialog = dialogRef.current
+      if (e.key !== 'Tab' || !dialog) return
+      const focusable = dialog.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      openerRef.current?.focus()
+    }
+  }, [confirming])
 
   async function save() {
     setSaving(true)
@@ -94,7 +131,11 @@ export function LivePage() {
             </button>
           )}
         </div>
-        {connection.error && <p className="error">{connection.error}</p>}
+        {connection.error && (
+          <p className="error" role="alert">
+            {connection.error}
+          </p>
+        )}
         {!s.bluetoothSupported && (
           <p className="hint">
             This browser can't use Bluetooth. Open the app in Chrome or Edge on your laptop to connect the
@@ -106,7 +147,9 @@ export function LivePage() {
       <section className="board" aria-label="Live workout data">
         <div className={`split ${inWorkout && !snap.live ? 'is-stale' : ''}`}>
           <span className="split-value">{formatPace(snap.pace)}</span>
-          <span className="split-label">split per 500 m</span>
+          <span className="split-label" role="status" aria-live="polite">
+            {inWorkout && !snap.live ? 'split per 500 m — signal lost, showing last reading' : 'split per 500 m'}
+          </span>
         </div>
 
         <dl className="tiles">
@@ -161,7 +204,9 @@ export function LivePage() {
           </>
         ) : snap.status === 'armed' ? (
           <>
-            <p className="waiting">Waiting for your first stroke</p>
+            <p className="waiting" role="status" aria-live="polite">
+              Waiting for your first stroke
+            </p>
             <button className="btn" onClick={s.discard}>Cancel</button>
           </>
         ) : (
@@ -171,7 +216,15 @@ export function LivePage() {
             ) : (
               <button className="btn btn-primary btn-large" onClick={s.resume}>Resume</button>
             )}
-            <button className="btn btn-large" onClick={() => setConfirming(true)}>Finish</button>
+            <button
+              className="btn btn-large"
+              onClick={(e) => {
+                openerRef.current = e.currentTarget
+                setConfirming(true)
+              }}
+            >
+              Finish
+            </button>
             {snap.status === 'paused' && (
               <button
                 className="btn btn-danger"
@@ -256,6 +309,8 @@ export function LivePage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="finish-title"
+            ref={dialogRef}
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="finish-title">Finish workout</h2>
