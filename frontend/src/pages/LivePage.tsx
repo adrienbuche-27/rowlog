@@ -18,6 +18,7 @@ export function LivePage() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [plans, setPlans] = useState<PlanInfo[]>([])
   const dialogRef = useRef<HTMLDivElement>(null)
   const openerRef = useRef<HTMLElement | null>(null)
   const savingRef = useRef(saving)
@@ -27,6 +28,10 @@ export function LivePage() {
   const connected = connection.state === 'connected'
   const busy = connection.state === 'connecting'
   const inWorkout = snap.status === 'recording' || snap.status === 'paused'
+
+  useEffect(() => {
+    api.plans().then(setPlans).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!confirming) return
