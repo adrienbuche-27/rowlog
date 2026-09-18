@@ -14,6 +14,7 @@
   --foam: #23201a;      /* text: ink */
   --mist: #6b6455;      /* secondary text: warm ink grey */
   --water: #b5482b;     /* live data, split: burnt orange */
+  --water-bright: #d6684a; /* split-value on the ink-dark split tile: --water there is only 3:1 on --foam */
   --ash: #2f5233;       /* primary actions, power: boathouse green */
   --reed: #7a6a2f;      /* stroke rate: brass */
   --pulse: #9c2b1f;     /* heart rate, danger: brick red */
@@ -390,7 +391,7 @@ h2 {
   font-size: clamp(5rem, 15vw, 11.5rem);
   line-height: 0.9;
   font-variant-numeric: tabular-nums;
-  color: var(--water);
+  color: var(--water-bright);
   letter-spacing: -0.01em;
 }
 .split-label {
@@ -454,6 +455,8 @@ h2 {
 
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
 .controls .hint { margin: 0; }
+/* Kept clear of Pause/Finish so a stray click can't land on it. */
+.controls-danger { margin-left: auto; }
 .waiting { margin: 0; font-family: var(--font-numbers); font-size: 1.5rem; color: var(--ash); }
 
 .simulator h2 { font-size: 1.1rem; }

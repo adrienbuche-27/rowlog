@@ -26,7 +26,6 @@ export function LivePage() {
 
   const { snapshot: snap, connection } = s
   const connected = connection.state === 'connected'
-  const busy = connection.state === 'connecting'
   const inWorkout = snap.status === 'recording' || snap.status === 'paused'
 
   useEffect(() => {
@@ -133,8 +132,12 @@ export function LivePage() {
             <button className="btn btn-primary" onClick={s.connect}>
               {s.sourceKind === 'bluetooth' ? 'Connect rower' : 'Start simulator'}
             </button>
+          ) : connection.state === 'connecting' ? (
+            <button className="btn btn-primary" disabled>
+              Connecting…
+            </button>
           ) : (
-            <button className="btn" onClick={s.disconnect} disabled={busy}>
+            <button className="btn" onClick={s.disconnect}>
               Disconnect
             </button>
           )}
@@ -201,9 +204,6 @@ export function LivePage() {
       <section className="controls" aria-label="Workout controls">
         {snap.status === 'idle' || snap.status === 'finished' ? (
           <>
-            <button className="btn btn-primary btn-large" onClick={s.start} disabled={!connected}>
-              Start workout
-            </button>
             <label className="select">
               <span>Session</span>
               <select
@@ -218,6 +218,9 @@ export function LivePage() {
                 ))}
               </select>
             </label>
+            <button className="btn btn-primary btn-large" onClick={s.start} disabled={!connected}>
+              Start workout
+            </button>
             <p className="hint">
               {connected
                 ? s.settings.startOnFirstStroke
@@ -251,7 +254,7 @@ export function LivePage() {
             </button>
             {snap.status === 'paused' && (
               <button
-                className="btn btn-danger"
+                className="btn btn-danger controls-danger"
                 onClick={() => {
                   if (confirm('Discard this workout? It will not be saved.')) void s.discard()
                 }}
@@ -298,6 +301,7 @@ export function LivePage() {
           <div className="sim-row">
             <button
               className="btn"
+              aria-pressed={s.simulator.rowing}
               onClick={() => {
                 s.simulator!.rowing = !s.simulator!.rowing
               }}
