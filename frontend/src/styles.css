@@ -1,35 +1,35 @@
 /*
-  RowLog design tokens — "Boathouse" theme
-  A regatta program on cream stock: brass, ink and burnt-orange rather than the default
-  dark lake-at-dawn theme. Same token names as the default theme (--lake, --water, --ash…)
-  so every component that reads them via cssVar() re-themes with no JS changes — only the
-  values and a handful of structural rules (sharper corners, an inverted "scoreboard"
-  split, underline tabs) change here.
+  RowLog design tokens — "PM5 Console" theme
+  A rowing-computer instrument panel: near-black bezel, amber/green LED-style digits,
+  one monospace typeface everywhere. Same token names as the other themes (--lake,
+  --water, --ash…) so every component that reads them via cssVar() re-themes with no
+  JS changes — only the values and a handful of structural rules (sharp corners, a top
+  instrument bar instead of a side rail, a segmented LED progress meter) change here.
 */
 :root {
-  --lake: #f3ecdc;      /* page: parchment */
-  --deep: #fffdf8;      /* panels: card stock */
-  --shoal: #e9dfc7;     /* raised controls */
-  --line: #cabb95;      /* borders, grid */
-  --foam: #23201a;      /* text: ink */
-  --mist: #6b6455;      /* secondary text: warm ink grey */
-  --water: #b5482b;     /* live data, split: burnt orange */
-  --water-bright: #d6684a; /* split-value on the ink-dark split tile: --water there is only 3:1 on --foam */
-  --ash: #2f5233;       /* primary actions, power: boathouse green */
-  --reed: #7a6a2f;      /* stroke rate: brass */
-  --pulse: #9c2b1f;     /* heart rate, danger: brick red */
-  --amber: #b5482b;     /* reconnecting */
+  --lake: #05080a;      /* page: near-black bezel */
+  --deep: #0d1412;      /* panels: recessed screen */
+  --shoal: #16201b;     /* raised controls */
+  --line: #2a3c31;      /* borders, grid: dim hairline */
+  --foam: #d8e6dd;      /* text: pale phosphor */
+  --mist: #8aa196;      /* secondary text: dim sage */
+  --water: #ffb400;     /* live data, split: amber LED */
+  --water-bright: #ffc94d; /* split-value hover/emphasis tint */
+  --ash: #33ff8c;       /* primary actions, power: phosphor green */
+  --reed: #39c8c0;      /* stroke rate: cyan */
+  --pulse: #ff5c5c;     /* heart rate, danger: red LED */
+  --amber: #ffb400;     /* reconnecting */
   --strava: #fc5200;
 
-  --font-numbers: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
-  --font-display: 'Zilla Slab', 'Georgia', serif;
-  --font-text: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --font-numbers: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-display: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-text: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --radius-control: 3px;
-  --radius-panel: 4px;
+  --radius-control: 0px;
+  --radius-panel: 0px;
   --space: 1rem;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -47,19 +47,20 @@ body {
 
 a { color: var(--water); }
 a:hover { color: var(--foam); }
-code { font-size: 0.9em; background: var(--shoal); padding: 0.05em 0.35em; border-radius: 4px; }
+code { font-size: 0.9em; background: var(--shoal); padding: 0.05em 0.35em; border-radius: 0; }
 
 h1, h2 {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   line-height: 1.1;
   margin: 0 0 0.75rem;
 }
-h1 { font-size: 2.15rem; }
+h1 { font-size: 1.7rem; }
 h2 {
   font-size: 1.05rem; color: var(--foam);
-  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  letter-spacing: 0.06em; font-weight: 700;
   padding-bottom: 0.4rem; border-bottom: 1px solid var(--line);
 }
 
@@ -69,55 +70,54 @@ h2 {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-/* ---------- Shell: sidebar rail + content ---------- */
+/* ---------- Shell: top instrument bar + content ---------- */
 .app-shell {
-  display: grid;
-  grid-template-columns: 208px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
-/* Card stock against the parchment page, held by the same heavy ink rule the
-   rest of the theme uses to separate one sheet from another. The aside stretches
-   to the full page height; .sidebar-inner is the part that sticks. */
 .sidebar {
   background: var(--deep);
-  border-right: 2px solid var(--foam);
+  border-bottom: 1px solid var(--line);
 }
 .sidebar-inner {
-  display: flex; flex-direction: column; gap: 1.5rem;
-  padding: 1.1rem 0.9rem;
-  position: sticky; top: 0; min-height: 100vh;
+  display: flex; flex-direction: row; align-items: center; flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding: 0.65rem clamp(1rem, 3vw, 2rem);
 }
 .brand {
-  display: inline-flex; align-items: center; gap: 0.5rem;
+  display: inline-flex; align-items: center; gap: 0.45rem;
   color: var(--foam); text-decoration: none;
-  font-family: var(--font-display); font-size: 1.4rem; font-weight: 600;
-  padding: 0 0.35rem;
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
 }
+.brand::before { content: '['; color: var(--mist); }
+.brand::after { content: ']'; color: var(--mist); }
 .brand:hover { color: var(--water); }
 
-.sidebar-nav { display: flex; flex-direction: column; gap: 0.1rem; }
+.sidebar-nav { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.3rem; }
 .sidebar-nav a {
-  display: flex; align-items: center; gap: 0.6rem;
+  display: flex; align-items: center; gap: 0.5rem;
   color: var(--mist); text-decoration: none;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
-  /* The underline tab of the horizontal theme, stood on its end. */
-  border-left: 2px solid transparent;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  border: 1px solid transparent;
 }
 .sidebar-nav a svg { flex: none; opacity: 0.7; }
-.sidebar-nav a:hover { color: var(--foam); background: color-mix(in srgb, var(--shoal) 45%, transparent); }
+.sidebar-nav a:hover { color: var(--foam); border-color: var(--line); }
 .sidebar-nav a.active {
-  color: var(--foam); background: var(--shoal); border-left-color: var(--water);
+  color: var(--lake); background: var(--water); border-color: var(--water);
 }
-.sidebar-nav a.active svg { opacity: 1; color: var(--water); }
+.sidebar-nav a.active svg { opacity: 1; color: var(--lake); }
 .rec-dot {
   display: inline-block; width: 7px; height: 7px; margin-left: auto;
   border-radius: 50%; background: var(--pulse);
+  animation: blink 1s steps(2) infinite;
 }
 
 .sidebar-foot {
-  margin-top: auto; padding: 0.75rem 0.6rem 0;
-  border-top: 1px solid var(--line);
+  margin-left: auto; padding-left: 0.9rem;
+  border-left: 1px solid var(--line);
 }
 .sidebar-foot .badge { flex-wrap: wrap; gap: 0.35rem; font-size: 0.85rem; }
 
@@ -147,7 +147,7 @@ h2 {
   text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; font-weight: 600;
 }
 
-/* Entries in a race programme: hairline-ruled rows, the open one lifted onto card stock. */
+/* Log entries: hairline-ruled rows, the open one lit up on the recessed-screen color. */
 .list-item {
   display: grid; gap: 0.1rem;
   padding: 0.6rem 0.75rem;
@@ -159,9 +159,8 @@ h2 {
 .list-item.is-active {
   background: var(--deep);
   border-left-color: var(--water);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--foam) 8%, transparent);
 }
-.list-item-title { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
+.list-item-title { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; }
 .list-item-meta { display: flex; gap: 0.9rem; color: var(--mist); font-size: 0.85rem; }
 .list-item-meta .num { font-family: var(--font-numbers); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .list-item-overview .list-item-meta { display: block; font-style: italic; }
@@ -180,18 +179,18 @@ h2 {
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 2.5rem; padding: 0.4rem 1.1rem;
-  font: 600 0.85rem var(--font-text);
+  font: 700 0.85rem var(--font-text);
   text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--foam); background: transparent;
   border: 1.5px solid var(--foam); border-radius: var(--radius-control);
   text-decoration: none; cursor: pointer;
 }
-.btn:hover:not(:disabled) { background: var(--foam); color: var(--deep); }
+.btn:hover:not(:disabled) { background: var(--foam); color: var(--lake); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-primary { background: var(--ash); border-color: var(--ash); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: #24401f; border-color: #24401f; color: #fff; }
+.btn-primary { background: var(--ash); border-color: var(--ash); color: var(--lake); }
+.btn-primary:hover:not(:disabled) { background: #7dffb8; border-color: #7dffb8; color: var(--lake); }
 .btn-danger { color: var(--pulse); border-color: var(--pulse); }
-.btn-danger:hover:not(:disabled) { background: var(--pulse); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: var(--pulse); color: var(--lake); }
 .btn-strava { background: var(--strava); border-color: var(--strava); color: #fff; }
 .btn-strava:hover:not(:disabled) { color: #fff; filter: brightness(1.08); }
 .btn-large { min-height: 3.25rem; padding: 0.5rem 1.75rem; font-size: 1rem; }
@@ -201,12 +200,13 @@ h2 {
   background: var(--lake); border: 1px solid var(--line); border-radius: var(--radius-control);
 }
 .segmented button {
-  font: 600 0.9rem var(--font-text); color: var(--mist);
-  background: transparent; border: 0; border-radius: 6px;
+  font: 700 0.9rem var(--font-text); color: var(--mist);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  background: transparent; border: 0; border-radius: 0;
   padding: 0.35rem 0.8rem; cursor: pointer;
 }
 .segmented button:hover:not(:disabled) { color: var(--foam); }
-.segmented button.is-active { background: var(--shoal); color: var(--foam); }
+.segmented button.is-active { background: var(--shoal); color: var(--water); }
 .segmented button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .select { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--mist); font-size: 0.9rem; }
@@ -222,15 +222,15 @@ h2 {
 .toggle { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem 0; cursor: pointer; }
 .toggle input { position: absolute; opacity: 0; }
 .toggle-track {
-  flex: none; width: 2.5rem; height: 1.4rem; margin-top: 0.1rem; border-radius: 1rem;
+  flex: none; width: 2.6rem; height: 1.4rem; margin-top: 0.1rem; border-radius: 0;
   background: var(--lake); border: 1px solid var(--line); position: relative;
 }
 .toggle-track::after {
-  content: ''; position: absolute; top: 2px; left: 2px; width: 1rem; height: 1rem; border-radius: 50%;
+  content: ''; position: absolute; top: 2px; left: 2px; width: 1rem; height: 1rem; border-radius: 0;
   background: var(--mist); transition: transform 150ms ease;
 }
-.toggle input:checked + .toggle-track { background: var(--water); border-color: var(--water); }
-.toggle input:checked + .toggle-track::after { transform: translateX(1.1rem); background: var(--lake); }
+.toggle input:checked + .toggle-track { background: var(--lake); border-color: var(--water); }
+.toggle input:checked + .toggle-track::after { transform: translateX(1.2rem); background: var(--water); }
 .toggle input:focus-visible + .toggle-track { outline: 2px solid var(--water); outline-offset: 2px; }
 .toggle-text { display: grid; }
 .toggle-description { color: var(--mist); font-size: 0.9rem; }
@@ -240,8 +240,8 @@ h2 {
   display: inline-flex; align-items: center; gap: 0.45rem;
   font-size: 0.9rem; color: var(--mist); white-space: nowrap;
 }
-.badge-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
-.badge-connected .badge-dot { background: var(--reed); }
+.badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.badge-connected .badge-dot { background: var(--ash); }
 .badge-connected { color: var(--foam); }
 .badge-connecting .badge-dot { background: var(--water); }
 .badge-reconnecting { color: var(--amber); }
@@ -252,7 +252,7 @@ h2 {
 /* ---------- Messages ---------- */
 .hint { color: var(--mist); font-size: 0.9rem; margin: 0.5rem 0 0; }
 .error { color: var(--pulse); margin: 0.5rem 0 0; }
-.success { color: var(--reed); margin: 0 0 0.75rem; }
+.success { color: var(--ash); margin: 0 0 0.75rem; }
 .empty { color: var(--mist); padding: 2rem 0; text-align: center; margin: 0; }
 .page-message { max-width: 60ch; margin: 3rem auto; }
 .notice {
@@ -271,7 +271,6 @@ h2 {
   border-radius: var(--radius-panel);
   padding: 1.1rem 1.25rem;
   margin-bottom: 1rem;
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--foam) 10%, transparent);
 }
 .panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
 .chart { width: 100%; }
@@ -280,7 +279,7 @@ h2 {
 .table-scroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .table th {
-  text-align: left; font-weight: 600; color: var(--mist); font-size: 0.75rem;
+  text-align: left; font-weight: 700; color: var(--mist); font-size: 0.75rem;
   text-transform: uppercase; letter-spacing: 0.05em;
   padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
 }
@@ -289,7 +288,7 @@ h2 {
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr.is-active { background: color-mix(in srgb, var(--water) 12%, transparent); }
 
-.route-map { width: 100%; border-radius: var(--radius-control); overflow: hidden; }
+.route-map { width: 100%; border-radius: var(--radius-control); overflow: hidden; border: 1px solid var(--line); }
 .route-map--static .leaflet-control-zoom { display: none; }
 .route-map--static .leaflet-control-attribution { font-size: 0.65rem; }
 
@@ -375,31 +374,34 @@ h2 {
   margin-bottom: 1.25rem;
 }
 
-/* The one loud element: the split, readable from the rowing seat. */
-/* A finish-line clock: ink block, cream digits — the loud element on the Row page. */
+/* The one loud element: the split, readable from the rowing seat — styled as the
+   monitor's own recessed LCD, with a bright power-on strip along the top. */
 .split {
   display: grid;
   justify-items: start;
   padding: 1.1rem 1.5rem;
-  background: var(--foam);
+  background: var(--deep);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--water);
   border-radius: var(--radius-panel);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--foam) 18%, transparent);
 }
 .split-value {
   font-family: var(--font-numbers);
-  font-weight: 500;
+  font-weight: 700;
   font-size: clamp(5rem, 15vw, 11.5rem);
   line-height: 0.9;
   font-variant-numeric: tabular-nums;
-  color: var(--water-bright);
+  color: var(--water);
   letter-spacing: -0.01em;
 }
 .split-label {
-  color: var(--lake); font-size: 0.85rem; margin-top: 0.5rem;
-  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+  color: var(--mist); font-size: 0.85rem; margin-top: 0.5rem;
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
 }
-.split.is-stale { background: var(--mist); }
-.split.is-stale .split-value { color: var(--deep); }
+/* Signal lost: the display dims rather than brightens, like a monitor losing its backlight. */
+.split.is-stale { border-top-color: var(--mist); }
+.split.is-stale .split-value { color: var(--mist); }
+.split.is-stale .split-label { color: var(--mist); }
 
 .tiles {
   display: grid;
@@ -414,7 +416,7 @@ h2 {
 .tile { background: var(--deep); padding: 0.6rem 0.9rem; }
 .tile dt {
   color: var(--mist); font-size: 0.75rem;
-  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
 }
 .tile dd {
   margin: 0; font-family: var(--font-numbers); font-size: clamp(1.8rem, 3.2vw, 2.6rem);
@@ -434,7 +436,7 @@ h2 {
 }
 .session-banner-head {
   margin: 0; color: var(--mist);
-  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
 }
 .session-banner-value {
   margin: 0.1rem 0 0;
@@ -447,17 +449,23 @@ h2 {
 .session-banner.is-rest .session-banner-value { color: var(--ash); }
 .session-banner.is-done { border-left-color: var(--reed); }
 
+/* A segmented LED meter rather than a smooth bar. */
 .session-progress {
-  height: 6px; margin-top: 0.5rem; overflow: hidden;
-  background: var(--shoal); border-radius: 3px;
+  height: 8px; margin-top: 0.5rem; overflow: hidden;
+  background: var(--shoal); border-radius: 0; border: 1px solid var(--line);
 }
-.session-progress span { display: block; height: 100%; background: var(--water); }
+.session-progress span {
+  display: block; height: 100%; background: var(--water);
+  background-image: repeating-linear-gradient(
+    90deg, transparent 0, transparent 5px, var(--shoal) 5px, var(--shoal) 7px
+  );
+}
 
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
 .controls .hint { margin: 0; }
 /* Kept clear of Pause/Finish so a stray click can't land on it. */
 .controls-danger { margin-left: auto; }
-.waiting { margin: 0; font-family: var(--font-numbers); font-size: 1.5rem; color: var(--ash); }
+.waiting { margin: 0; font-family: var(--font-numbers); font-size: 1.5rem; color: var(--water); }
 
 .simulator h2 { font-size: 1.1rem; }
 .sim-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
@@ -465,11 +473,11 @@ h2 {
 /* ---------- Dialog ---------- */
 .dialog-backdrop {
   position: fixed; inset: 0; display: grid; place-items: center; padding: 1rem;
-  background: color-mix(in srgb, var(--lake) 75%, transparent);
+  background: color-mix(in srgb, var(--lake) 85%, transparent);
 }
 .dialog {
   width: min(460px, 100%); padding: 1.5rem;
-  background: var(--deep); border: 1px solid var(--line); border-radius: var(--radius-panel);
+  background: var(--deep); border: 1px solid var(--water); border-radius: var(--radius-panel);
 }
 .dialog h2 { text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0; font-size: 1.3rem; }
 .dialog p { margin: 0 0 0.5rem; }
@@ -490,7 +498,7 @@ h2 {
 .bar { display: grid; grid-template-rows: auto 1fr auto; height: 100%; text-align: center; }
 .bar-fill {
   align-self: end; width: 100%; min-height: 2px;
-  background: var(--water); border-radius: 3px 3px 0 0;
+  background: var(--water); border-radius: 0;
 }
 .bar-value { font-family: var(--font-numbers); font-size: 0.9rem; color: var(--mist); }
 .bar:nth-child(even) .bar-label { visibility: hidden; }
@@ -510,24 +518,7 @@ h2 {
 @media (max-width: 820px) {
   .board, .workout-grid { grid-template-columns: 1fr; }
   .connect-actions { margin-left: 0; }
-
-  /* The rail turns into a top bar, and the accent rule turns back into an underline tab. */
-  /* Stacked, the bar must hug its content — otherwise the grid hands it half the
-     leftover page height. */
-  .app-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .sidebar { border-right: 0; border-bottom: 2px solid var(--foam); }
-  .sidebar-inner {
-    position: static; min-height: 0;
-    flex-direction: row; align-items: center; gap: 0.75rem 1rem; flex-wrap: wrap;
-    padding: 0.7rem clamp(1rem, 3vw, 2rem);
-  }
-  .sidebar-nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1rem; }
-  .sidebar-nav a {
-    border-left: 0; border-bottom: 2px solid transparent; background: none;
-  }
-  .sidebar-nav a.active { background: none; border-bottom-color: var(--water); }
-  .rec-dot { margin-left: 0.4rem; }
-  .sidebar-foot { margin: 0 0 0 auto; padding: 0; border-top: 0; }
+  .sidebar-foot { margin: 0 0 0 auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
