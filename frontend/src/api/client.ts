@@ -1,4 +1,6 @@
 import type {
+  PlanCreate,
+  PlanInfo,
   RouteInfo,
   StatsOverview,
   StravaStatus,
@@ -54,6 +56,11 @@ export const api = {
     }),
   deleteWorkout: (id: number) => request<void>(`/api/workouts/${id}`, { method: 'DELETE' }),
   fitUrl: (id: number) => `${BASE}/api/workouts/${id}/fit`,
+
+  plans: () => request<PlanInfo[]>('/api/plans'),
+  createPlan: (payload: PlanCreate) =>
+    request<PlanInfo>('/api/plans', { method: 'POST', body: JSON.stringify(payload) }),
+  deletePlan: (id: number) => request<void>(`/api/plans/${id}`, { method: 'DELETE' }),
 
   routes: () => request<RouteInfo[]>('/api/routes'),
   createRoute: (name: string, file: File) => {

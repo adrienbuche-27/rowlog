@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
 import { HistoryPage } from './pages/HistoryPage'
 import { LivePage } from './pages/LivePage'
+import { PlansPage } from './pages/PlansPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SessionProvider } from './session/SessionProvider'
 
@@ -21,6 +22,7 @@ export default function App() {
               {/* A workout opens inside the History workspace rather than on its own page. */}
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/workouts/:id" element={<HistoryPage />} />
+              <Route path="/plans" element={<PlansPage />} />
               <Route
                 path="/routes"
                 element={

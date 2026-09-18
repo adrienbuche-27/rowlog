@@ -324,6 +324,27 @@ h2 {
   border: 1px solid var(--line); border-radius: var(--radius-control); padding: 0.35rem 0.5rem;
 }
 .route-card-add input[type='file'] { font-size: 0.85rem; color: var(--mist); }
+
+.plan-card h2 { font-family: var(--font-display); text-transform: none; letter-spacing: normal; border-bottom: 0; padding-bottom: 0; font-size: 1.05rem; margin-bottom: 0.1rem; }
+.plan-card .hint { margin: 0 0 0.5rem; }
+.plan-pieces { margin: 0 0 0.5rem; padding-left: 1.2rem; }
+.plan-pieces li { margin-bottom: 0.15rem; }
+.plan-pieces .num { font-family: var(--font-numbers); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.plan-rest { color: var(--mist); font-size: 0.85rem; margin-left: 0.5rem; }
+
+/* The piece editor needs three fields on a row, which does not fit one card column. */
+.plan-card-add { justify-content: flex-start; grid-column: span 2; }
+@media (max-width: 620px) {
+  .plan-card-add { grid-column: auto; }
+  .plan-editor-row { grid-template-columns: 1fr 1fr; }
+  .plan-editor-row select { grid-column: 1 / -1; }
+}
+.plan-editor-row { display: grid; grid-template-columns: 9rem 1fr 1fr auto; gap: 0.35rem; margin-bottom: 0.35rem; }
+.plan-editor-row select, .plan-editor-row input {
+  font: inherit; color: var(--foam); background: var(--lake); min-width: 0;
+  border: 1px solid var(--line); border-radius: var(--radius-control); padding: 0.3rem 0.4rem;
+}
+.plan-editor-remove { min-height: 0; padding: 0.2rem 0.5rem; }
 .route-card-add button { margin-top: 0.75rem; width: 100%; }
 
 .page-head { margin-bottom: 1.25rem; }
@@ -400,6 +421,36 @@ h2 {
 }
 .tile dd small { font-family: var(--font-text); font-size: 0.8rem; color: var(--mist); margin-left: 0.3rem; }
 .tile-time dd { color: var(--ash); }
+
+/* Where you are in a training session; sits just above the split. */
+.session-banner {
+  background: var(--deep);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--water);
+  border-radius: var(--radius-panel);
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+}
+.session-banner-head {
+  margin: 0; color: var(--mist);
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.session-banner-value {
+  margin: 0.1rem 0 0;
+  font-family: var(--font-numbers); font-size: 2.2rem; line-height: 1.1;
+  font-variant-numeric: tabular-nums; color: var(--foam);
+}
+.session-banner-value small { font-family: var(--font-text); font-size: 0.8rem; color: var(--mist); margin-left: 0.4rem; }
+.session-banner .hint { margin: 0.1rem 0 0; }
+.session-banner.is-rest { border-left-color: var(--ash); }
+.session-banner.is-rest .session-banner-value { color: var(--ash); }
+.session-banner.is-done { border-left-color: var(--reed); }
+
+.session-progress {
+  height: 6px; margin-top: 0.5rem; overflow: hidden;
+  background: var(--shoal); border-radius: 3px;
+}
+.session-progress span { display: block; height: 100%; background: var(--water); }
 
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
 .controls .hint { margin: 0; }

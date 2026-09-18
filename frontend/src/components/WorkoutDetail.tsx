@@ -124,6 +124,39 @@ export function WorkoutDetail({ workoutId, onDeleted }: Props) {
         <MetricChart samples={workout.samples} metric={metric} height={240} />
       </section>
 
+      {/* For a session row the pieces are the story, so they get the full width. */}
+      {workout.pieces && (
+        <section className="panel">
+          <h2>Pieces</h2>
+          <div className="table-scroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Target</th><th>Distance</th><th>Time</th><th>Split</th>
+                  <th>Rate</th><th>Power</th><th>Rest</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workout.pieces.map((p) => (
+                  <tr key={p.index}>
+                    <td className="num">{p.index}</td>
+                    <td className="num">
+                      {p.kind === 'distance' ? `${formatMetres(p.target)} m` : formatDuration(p.target)}
+                    </td>
+                    <td className="num">{formatMetres(p.distance_m)} m</td>
+                    <td className="num">{formatDuration(p.time_s)}</td>
+                    <td className="num">{formatPace(p.split_s)}</td>
+                    <td className="num">{formatNumber(p.avg_spm)}</td>
+                    <td className="num">{formatNumber(p.avg_power_w)} W</td>
+                    <td className="num">{p.rest_s == null ? '–' : formatDuration(p.rest_s)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <div className="workout-grid">
         <section className="panel">
           <h2>Splits every 500 m</h2>

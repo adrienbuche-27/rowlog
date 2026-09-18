@@ -14,11 +14,41 @@ export interface Sample {
   connected: boolean
 }
 
+export type PieceKind = 'distance' | 'time'
+
+/** One piece of a training session. `target` is metres, or seconds when kind is 'time'. */
+export interface PlanPiece {
+  kind: PieceKind
+  target: number
+  /** Rest after this piece; ignored on the last one. */
+  rest_s: number
+}
+
+export interface PlanCreate {
+  name: string
+  pieces: PlanPiece[]
+}
+
+export interface PlanInfo extends PlanCreate {
+  id: number
+}
+
+/** A piece as actually rowed, in timer seconds since the workout started. */
+export interface RowedPiece {
+  index: number
+  kind: PieceKind
+  target: number
+  start_t: number
+  end_t: number
+}
+
 export interface WorkoutCreate {
   client_id: string
   started_at: string
   notes: string
   samples: Sample[]
+  plan_id?: number | null
+  pieces?: RowedPiece[] | null
 }
 
 export type StravaUploadStatus = 'none' | 'processing' | 'done' | 'error'
@@ -41,6 +71,7 @@ export interface WorkoutSummary {
   disconnect_s: number
   notes: string
   route_id: number | null
+  plan_id: number | null
   strava_status: StravaUploadStatus
   strava_activity_id: number | null
   strava_error: string | null
@@ -65,9 +96,18 @@ export interface Split {
   avg_hr: number | null
 }
 
+export interface PieceSplit extends Split {
+  kind: PieceKind
+  target: number
+  /** Rest actually taken before the next piece; null on the last one. */
+  rest_s: number | null
+}
+
 export interface WorkoutDetail extends WorkoutSummary {
   samples: Sample[]
   splits: Split[]
+  /** Only for a row that followed a training session. */
+  pieces: PieceSplit[] | null
 }
 
 export interface StatsOverview {

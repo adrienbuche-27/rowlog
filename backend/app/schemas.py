@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,11 +18,42 @@ class Sample(BaseModel):
     connected: bool = True
 
 
+class PlanPiece(BaseModel):
+    """One piece of a training session. `target` is metres, or seconds when kind='time'."""
+
+    kind: Literal["distance", "time"]
+    target: float = Field(gt=0)
+    rest_s: float = Field(0, ge=0, description="Rest after this piece; ignored on the last one")
+
+
+class PlanCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    pieces: list[PlanPiece] = Field(min_length=1)
+
+
+class PlanInfo(PlanCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
+
+class RowedPiece(BaseModel):
+    """A piece as actually rowed, in timer seconds since the workout started."""
+
+    index: int
+    kind: Literal["distance", "time"]
+    target: float
+    start_t: float
+    end_t: float
+
+
 class WorkoutCreate(BaseModel):
     client_id: str = Field(min_length=8, max_length=64)
     started_at: datetime
     notes: str = ""
     samples: list[Sample] = Field(min_length=1)
+    plan_id: int | None = None
+    pieces: list[RowedPiece] | None = None
 
 
 class WorkoutUpdate(BaseModel):
@@ -49,6 +81,7 @@ class WorkoutSummary(BaseModel):
     disconnect_s: float
     notes: str
     route_id: int | None
+    plan_id: int | None
     strava_status: str
     strava_activity_id: int | None
     strava_error: str | None
@@ -64,9 +97,19 @@ class Split(BaseModel):
     avg_hr: float | None
 
 
+class PieceSplit(Split):
+    """A 500 m split's worth of stats, but measured over one piece of a session."""
+
+    kind: Literal["distance", "time"]
+    target: float
+    rest_s: float | None
+
+
 class WorkoutDetail(WorkoutSummary):
     samples: list[Sample]
     splits: list[Split]
+    # Only for a row that followed a training session.
+    pieces: list[PieceSplit] | None = None
 
 
 class WeeklyTotal(BaseModel):

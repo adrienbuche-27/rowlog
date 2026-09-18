@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { api } from '../api/client'
+import type { PlanInfo } from '../api/types'
 import { ConnectionBadge } from '../components/ConnectionBadge'
 import { MetricChart } from '../components/MetricChart'
 import { MetricTabs } from '../components/MetricTabs'
+import { SessionBanner } from '../components/SessionBanner'
 import { formatDuration, formatMetres, formatNumber, formatPace } from '../lib/format'
 import type { MetricKey } from '../lib/metrics'
 import { useSession } from '../session/SessionProvider'
@@ -15,6 +18,11 @@ export function LivePage() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [plans, setPlans] = useState<PlanInfo[]>([])
+
+  useEffect(() => {
+    api.plans().then(setPlans).catch(() => setPlans([]))
+  }, [])
 
   const { snapshot: snap, connection } = s
   const connected = connection.state === 'connected'
@@ -103,6 +111,8 @@ export function LivePage() {
         )}
       </section>
 
+      {s.runner && s.plan && <SessionBanner state={s.runner} planName={s.plan.name} />}
+
       <section className="board" aria-label="Live workout data">
         <div className={`split ${inWorkout && !snap.live ? 'is-stale' : ''}`}>
           <span className="split-value">{formatPace(snap.pace)}</span>
@@ -151,6 +161,20 @@ export function LivePage() {
             <button className="btn btn-primary btn-large" onClick={s.start} disabled={!connected}>
               Start workout
             </button>
+            <label className="select">
+              <span>Session</span>
+              <select
+                value={s.plan?.id ?? ''}
+                onChange={(e) =>
+                  s.setPlan(plans.find((p) => p.id === Number(e.target.value)) ?? null)
+                }
+              >
+                <option value="">Free row</option>
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </label>
             <p className="hint">
               {connected
                 ? s.settings.startOnFirstStroke

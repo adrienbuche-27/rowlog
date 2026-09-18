@@ -109,6 +109,55 @@ def splits(samples: Sequence[dict], every_m: float = 500) -> list[dict]:
     return result
 
 
+def _distance_at_time(samples: Sequence[dict], t: float) -> float:
+    """Interpolated cumulative distance at timer time `t`."""
+    if not samples:
+        return 0.0
+    if t <= float(samples[0]["t"]):
+        return float(samples[0].get("distance") or 0)
+    for i in range(1, len(samples)):
+        t1 = float(samples[i]["t"])
+        if t1 >= t:
+            t0 = float(samples[i - 1]["t"])
+            d0 = float(samples[i - 1].get("distance") or 0)
+            d1 = float(samples[i].get("distance") or 0)
+            return d1 if t1 == t0 else d0 + (t - t0) / (t1 - t0) * (d1 - d0)
+    return float(samples[-1].get("distance") or 0)
+
+
+def piece_splits(samples: Sequence[dict], pieces: Sequence[dict] | None) -> list[dict]:
+    """Per-piece stats for a row that followed a training session.
+
+    `pieces` are the boundaries recorded live (schemas.RowedPiece). Rest is the gap to the
+    next piece, so it reports the rest actually taken rather than the one planned.
+    """
+    if not samples or not pieces:
+        return []
+
+    result: list[dict] = []
+    for n, piece in enumerate(pieces):
+        start_t, end_t = float(piece["start_t"]), float(piece["end_t"])
+        seg = [s for s in samples if start_t <= float(s["t"]) <= end_t]
+        dist = _distance_at_time(samples, end_t) - _distance_at_time(samples, start_t)
+        time = end_t - start_t
+        nxt = pieces[n + 1] if n + 1 < len(pieces) else None
+        result.append(
+            {
+                "index": int(piece.get("index", n + 1)),
+                "kind": piece.get("kind", "distance"),
+                "target": float(piece.get("target") or 0),
+                "rest_s": round(float(nxt["start_t"]) - end_t, 1) if nxt else None,
+                "distance_m": round(dist, 1),
+                "time_s": round(time, 1),
+                "split_s": round(time / dist * 500, 1) if dist > 0 else 0.0,
+                "avg_spm": _mean(_values(seg, "spm")),
+                "avg_power_w": _mean(_values(seg, "power")),
+                "avg_hr": _mean(_values(seg, "hr")),
+            }
+        )
+    return result
+
+
 def best_time_for_distance(samples: Sequence[dict], target_m: float) -> float | None:
     """Fastest continuous segment covering `target_m` metres (sliding window)."""
     n = len(samples)

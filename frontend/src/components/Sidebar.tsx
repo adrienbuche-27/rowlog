@@ -12,6 +12,7 @@ const icon = (path: React.ReactNode) => (
 const ICON_ROW = icon(<path d="M3 15c2.6 0 2.6-2.5 5.2-2.5S10.8 15 13.4 15s2.6-2.5 5.2-2.5M6 8h12" />)
 const ICON_HISTORY = icon(<path d="M4 6h16M4 12h16M4 18h10" />)
 const ICON_COURSES = icon(<path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2v14" />)
+const ICON_PLANS = icon(<><path d="M12 20V10M6 20v-6M18 20V4" /></>)
 const ICON_SETTINGS = icon(<><circle cx="12" cy="12" r="3" /><path d="M12 3v2m0 14v2M5 12H3m18 0h-2M6.3 6.3 4.9 4.9m14.2 14.2-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4" /></>)
 
 export function Sidebar() {
@@ -45,6 +46,10 @@ export function Sidebar() {
           <NavLink to="/history" className={() => (historyOpen ? 'active' : '')}>
             {ICON_HISTORY}
             <span>History</span>
+          </NavLink>
+          <NavLink to="/plans">
+            {ICON_PLANS}
+            <span>Sessions</span>
           </NavLink>
           <NavLink to="/routes">
             {ICON_COURSES}
