@@ -11,8 +11,9 @@ Ordered by value for daily use. Each item is sized to be a single Claude Code ta
 - [x] **Database migrations** with Alembic before changing any model.
 
 ## Training features
-- [ ] Structured workouts: intervals by time or distance with rest, targets for split and rate,
-      live progress and interval splits stored per workout.
+- [x] Structured workouts: intervals by time or distance with rest, live progress and interval
+      splits stored per workout. Targets for split and rate are still to do, as is keeping the
+      session across a mid-row reload (a restored workout carries on as a free row).
 - [ ] Target pace band on the live chart.
 - [ ] Voice or audio cues every 500 m or interval.
 - [ ] "Ghost" race against a previous workout or personal best.

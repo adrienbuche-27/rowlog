@@ -44,13 +44,17 @@ IndexedDB outbox and sync later; `POST /api/workouts` is idempotent on `client_i
   pause, per-second samples, gap filling, stale-data detection, serialize/restore).
 - `session/CumulativeCounter.ts` — keeps distance/strokes/energy monotonic across monitor resets,
   pauses and reloads.
+- `session/IntervalRunner.ts` — pure state machine for a training session: current piece, timed
+  rest, auto-advance. Driven from the recorder's **samples** (`consume`), not the live snapshot,
+  so piece boundaries survive a throttled tab.
 - `session/SessionProvider.tsx` — React context wiring source → recorder → UI; persistence every
   5 s, wake lock, outbox sync, settings.
 - `pages/` — `LivePage`, `HistoryPage`, `WorkoutPage`, `SettingsPage`.
 - `api/types.ts` mirrors `backend/app/schemas.py`. **Change both together.**
 
 ### Backend (`backend/app`)
-- `routers/workouts.py`, `routers/stats.py`, `routers/strava.py`, `routers/routes.py`
+- `routers/workouts.py`, `routers/stats.py`, `routers/strava.py`, `routers/routes.py`,
+  `routers/plans.py`
 - `services/analytics.py` — pure functions: summary, 500 m splits, best time over a distance
   (sliding window with interpolation), weekly totals.
 - `services/fit_encoder.py` — hand-written FIT encoder (file_id, events, records, lap, session,
@@ -61,6 +65,10 @@ IndexedDB outbox and sync later; `POST /api/workouts` is idempotent on `client_i
 - `services/strava.py` — OAuth code exchange, token refresh, upload + status polling. Takes an
   optional `httpx` transport so tests mock Strava without network.
 - Samples are stored as a JSON column on `workouts` (one dict per second).
+- Training sessions live in the `plans` table (name + JSON pieces). A workout stores the plan it
+  followed and the pieces as actually rowed (`workouts.pieces`, boundaries in timer seconds);
+  per-piece stats are derived from the samples at read time by `analytics.piece_splits`, never
+  stored.
 - Routes (virtual GPS courses) are user-uploaded GPX files, stored in the `routes` table —
   `POST /api/routes` (multipart: `name` + `file`) parses and stores one; `workouts.route_id` is a
   nullable FK to it, cleared by hand on delete (SQLite doesn't enforce FKs here by default).

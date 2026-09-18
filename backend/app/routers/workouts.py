@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Route, Workout
+from app.models import Plan, Route, Workout
 from app.schemas import WorkoutCreate, WorkoutDetail, WorkoutSummary, WorkoutUpdate
 from app.services import analytics
 from app.services.fit_encoder import encode_rowing_activity
@@ -26,6 +26,7 @@ def to_detail(workout: Workout) -> WorkoutDetail:
             **WorkoutSummary.model_validate(workout).model_dump(),
             "samples": workout.samples,
             "splits": analytics.splits(workout.samples),
+            "pieces": analytics.piece_splits(workout.samples, workout.pieces) or None,
         }
     )
 
@@ -48,11 +49,15 @@ def create_workout(payload: WorkoutCreate, response: Response, db: Session = Dep
     started_at = payload.started_at
     if started_at.tzinfo is None:
         started_at = started_at.replace(tzinfo=UTC)
+    # A plan that was deleted mid-session still leaves the rowed pieces on the workout.
+    plan_id = payload.plan_id if payload.plan_id and db.get(Plan, payload.plan_id) else None
     workout = Workout(
         client_id=payload.client_id,
         started_at=started_at,
         notes=payload.notes,
         samples=samples,
+        plan_id=plan_id,
+        pieces=[p.model_dump() for p in payload.pieces] if payload.pieces else None,
         **analytics.summarize(samples),
     )
     db.add(workout)

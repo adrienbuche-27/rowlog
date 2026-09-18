@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
-import type { Sample } from '../api/types'
+import type { PlanInfo, Sample } from '../api/types'
 import { BluetoothRower, isBluetoothSupported } from '../ble/BluetoothRower'
 import { SimulatedRower } from '../ble/SimulatedRower'
 import type { ConnectionInfo, RowerSource } from '../ble/types'
 import { beep } from '../lib/beep'
 import { loadSettings, saveSettings, type AppSettings } from '../lib/settings'
 import { useWakeLock } from '../lib/useWakeLock'
+import { IntervalRunner, type RunnerState } from './IntervalRunner'
 import { syncOutbox } from './outbox'
 import { SessionRecorder, type LiveSnapshot, type PersistedSession } from './SessionRecorder'
 import { storage } from './storage'
@@ -37,6 +38,12 @@ interface SessionContextValue {
   finish: (notes?: string) => Promise<FinishResult>
   discard: () => Promise<void>
 
+  /** Training session to follow on the next row, chosen before starting. */
+  plan: PlanInfo | null
+  setPlan: (plan: PlanInfo | null) => void
+  /** Live progress through that session, once recording. */
+  runner: RunnerState | null
+
   restorable: PersistedSession | null
   restore: () => void
   dismissRestorable: () => Promise<void>
@@ -65,8 +72,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [outboxPending, setOutboxPending] = useState(0)
   const [outboxError, setOutboxError] = useState<string | null>(null)
 
+  const [plan, setPlan] = useState<PlanInfo | null>(null)
+  const [runner, setRunner] = useState<RunnerState | null>(null)
+
   const recorderRef = useRef(new SessionRecorder())
   const sourceRef = useRef<RowerSource | null>(null)
+  const runnerRef = useRef<IntervalRunner | null>(null)
+  const planRef = useRef<PlanInfo | null>(null)
+  planRef.current = plan
   const settingsRef = useRef(settings)
   settingsRef.current = settings
 
@@ -151,6 +164,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const id = setInterval(() => {
       const r = recorderRef.current
       r.tick(Date.now())
+      // Fed from the samples, not the live snapshot, so a throttled tab still gets the
+      // piece boundaries right — tick() has just back-filled the missing seconds.
+      if (runnerRef.current) setRunner(runnerRef.current.consume(r.samples))
       ticks += 1
       if (ticks % PERSIST_EVERY_TICKS === 0) void persist()
       refresh()
@@ -199,6 +215,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (r.status === 'finished') recorderRef.current = new SessionRecorder()
     if (settingsRef.current.startOnFirstStroke) recorderRef.current.arm()
     else recorderRef.current.start(Date.now())
+    const chosen = planRef.current
+    runnerRef.current = chosen ? new IntervalRunner(chosen.pieces) : null
+    setRunner(null)
     refresh()
   }, [refresh])
 
@@ -215,6 +234,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const reset = useCallback(async () => {
     recorderRef.current = new SessionRecorder()
+    runnerRef.current = null
+    setRunner(null)
     await storage.clearActive().catch(() => {})
     refresh()
   }, [refresh])
@@ -227,7 +248,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await reset()
         return { workoutId: null, queued: false }
       }
-      const payload = r.toPayload(notes)
+      // Only completed pieces are recorded; one abandoned half-way through is not a piece.
+      const rowed = runnerRef.current?.rowedPieces ?? []
+      const payload = {
+        ...r.toPayload(notes),
+        plan_id: planRef.current?.id ?? null,
+        pieces: rowed.length ? rowed : null,
+      }
       await storage.addToOutbox(payload)
       await reset()
 
@@ -276,6 +303,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       snapshot: r.snapshot(Date.now()),
       samples: r.samples,
       version,
+      plan,
+      setPlan,
+      runner,
       connect,
       disconnect,
       start,
@@ -298,7 +328,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [
     version, sourceKind, setSourceKind, connection, connect, disconnect, start, pause, resume,
     finish, discard, restorable, restore, dismissRestorable, outboxPending, outboxError, sync,
-    settings, updateSettings,
+    settings, updateSettings, plan, runner,
   ])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>

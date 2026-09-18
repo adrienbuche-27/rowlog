@@ -155,3 +155,82 @@ def test_strava_full_flow(client, samples):
 
     assert client.delete("/api/strava/connection").status_code == 204
     app.dependency_overrides.clear()
+
+
+PLAN_4x1000 = {
+    "name": "4x1000m / 2min",
+    "pieces": [
+        {"kind": "distance", "target": 1000, "rest_s": 120},
+        {"kind": "distance", "target": 1000, "rest_s": 120},
+        {"kind": "time", "target": 240, "rest_s": 0},
+    ],
+}
+
+
+def test_create_list_and_delete_a_plan(client):
+    created = client.post("/api/plans", json=PLAN_4x1000)
+    assert created.status_code == 201
+    plan = created.json()
+    assert plan["name"] == "4x1000m / 2min"
+    assert len(plan["pieces"]) == 3
+    assert plan["pieces"][2]["kind"] == "time"
+
+    assert any(p["id"] == plan["id"] for p in client.get("/api/plans").json())
+
+    assert client.delete(f"/api/plans/{plan['id']}").status_code == 204
+    assert client.get("/api/plans").json() == []
+    assert client.delete(f"/api/plans/{plan['id']}").status_code == 404
+
+
+def test_a_plan_needs_at_least_one_valid_piece(client):
+    assert client.post("/api/plans", json={"name": "Empty", "pieces": []}).status_code == 422
+    bad_target = {"name": "Bad", "pieces": [{"kind": "distance", "target": 0, "rest_s": 0}]}
+    assert client.post("/api/plans", json=bad_target).status_code == 422
+    bad_kind = {"name": "Bad", "pieces": [{"kind": "calories", "target": 10, "rest_s": 0}]}
+    assert client.post("/api/plans", json=bad_kind).status_code == 422
+
+
+def test_workout_records_the_session_it_followed(client, samples):
+    plan = client.post("/api/plans", json=PLAN_4x1000).json()
+    payload = workout_payload(samples) | {
+        "plan_id": plan["id"],
+        "pieces": [
+            {"index": 1, "kind": "distance", "target": 1000, "start_t": 0, "end_t": 240},
+            {"index": 2, "kind": "distance", "target": 1000, "start_t": 360, "end_t": 600},
+        ],
+    }
+    wid = client.post("/api/workouts", json=payload).json()["id"]
+
+    detail = client.get(f"/api/workouts/{wid}").json()
+    assert detail["plan_id"] == plan["id"]
+    assert len(detail["pieces"]) == 2
+
+    first, second = detail["pieces"]
+    assert first["kind"] == "distance" and first["target"] == 1000
+    assert first["time_s"] == 240
+    assert first["distance_m"] > 0
+    # Rest is the real gap between pieces, not the planned one.
+    assert first["rest_s"] == 120
+    assert second["rest_s"] is None
+
+
+def test_deleting_a_plan_keeps_the_workouts_that_used_it(client, samples):
+    plan = client.post("/api/plans", json=PLAN_4x1000).json()
+    payload = workout_payload(samples) | {
+        "plan_id": plan["id"],
+        "pieces": [{"index": 1, "kind": "distance", "target": 1000, "start_t": 0, "end_t": 240}],
+    }
+    wid = client.post("/api/workouts", json=payload).json()["id"]
+
+    client.delete(f"/api/plans/{plan['id']}")
+
+    detail = client.get(f"/api/workouts/{wid}").json()
+    assert detail["plan_id"] is None
+    assert len(detail["pieces"]) == 1  # the rowed pieces survive the plan
+
+
+def test_a_free_row_has_no_pieces(client, samples):
+    wid = client.post("/api/workouts", json=workout_payload(samples)).json()["id"]
+    detail = client.get(f"/api/workouts/{wid}").json()
+    assert detail["plan_id"] is None
+    assert detail["pieces"] is None
